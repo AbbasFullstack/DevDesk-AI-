@@ -1,6 +1,7 @@
 import express from 'express';
 import { z } from 'zod';
 import { askDevDesk } from './ai';
+import { buildProjectManifest } from './ingestion';
 import { env } from './env';
 
 const app = express();
@@ -29,13 +30,24 @@ app.post('/api/chat', async (req, res) => {
   }
 });
 
+app.post('/api/projects/ingest', (req, res) => {
+  const input = z.object({ name: z.string().trim().min(1).max(120), sourceType: z.enum(['zip', 'files', 'github']), files: z.array(z.object({ path: z.string().min(1).max(500), content: z.string().max(200_000).optional(), byteSize: z.number().int().nonnegative().optional() })).min(1).max(2_000) }).safeParse(req.body);
+  if (!input.success) return res.status(400).json({ error: 'Project name, source type, and files are required.' });
+  try {
+    const manifest = buildProjectManifest(input.data.files);
+    return res.status(201).json({ name: input.data.name, sourceType: input.data.sourceType, fileCount: manifest.length, files: manifest.map(({ normalizedPath, language, byteSize }) => ({ path: normalizedPath, language, byteSize })) });
+  } catch (error) {
+    return res.status(400).json({ error: error instanceof Error ? error.message : 'Project ingestion failed.' });
+  }
+});
+
 app.post('/api/analysis/preview', async (req, res) => {
-  const input = z.object({ projectName: z.string().trim().min(1).max(120), question: z.string().trim().min(3).max(4000) }).safeParse(req.body);
+  const input = z.object({ projectName: z.string().trim().min(1).max(120), question: z.string().trim().min(3).max(4000), files: z.array(z.object({ path: z.string().max(500), excerpt: z.string().max(14_000) })).max(120).default([]) }).safeParse(req.body);
   if (!input.success) return res.status(400).json({ error: 'A project name and question are required.' });
   try {
     const text = await askDevDesk([
       { role: 'system', content: 'You analyze software projects. Return a concise answer with sections: Understanding, Questions, Findings, and Recommended fix.' },
-      { role: 'user', content: `Project: ${input.data.projectName}\nQuestion: ${input.data.question}` },
+      { role: 'user', content: `Project: ${input.data.projectName}\nQuestion: ${input.data.question}\n\nProject context:\n${input.data.files.map((file) => `FILE ${file.path}\n${file.excerpt}`).join('\n\n').slice(0, env.maxInputCharacters)}` },
     ]);
     return res.json({ status: 'complete', projectName: input.data.projectName, text });
   } catch (error) {
