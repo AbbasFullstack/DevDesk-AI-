@@ -37,5 +37,5 @@
 - [ ] Verify GitHub OAuth callback and repository listing prerequisites
 - [ ] Fix any production auth or connector issues found during audit
 
-- [ ] Fix mobile header overflow so the Sign in control remains visible on phone screens
-- [ ] Validate the repaired Sign in flow on the live Vercel website
+- [x] Fix mobile header overflow so the Sign in control remains visible on phone screens
+- [x] Validate the repaired Sign in flow on the live Vercel website
