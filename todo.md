@@ -65,3 +65,7 @@
 - [x] Add account-menu shortcuts for chat history, projects, and account settings
 - [x] Add authenticated password change, account switch, and logout actions
 - [ ] Validate the new mobile account menu and settings flow
+
+- [x] Make the mobile account menu fully opaque and legible above all workspace content
+- [x] Move main-screen current-chat and history controls into the three-line menu only
+- [ ] Validate the simplified menu-driven mobile chat navigation on Vercel
