@@ -24,13 +24,26 @@ export default function Home() {
   const [showUpload, setShowUpload] = useState(false);
   const [preview, setPreview] = useState(true);
   const [message, setMessage] = useState('');
+  const [aiResponse, setAiResponse] = useState('I found a strong foundation. The auth boundary is clear, but the refresh-token path needs an explicit replay check. I also found three opportunities to reduce client-side bundle weight.');
+  const [chatError, setChatError] = useState('');
 
-  const sendPrompt = () => {
+  const sendPrompt = async () => {
     if (!prompt.trim()) return;
+    const nextMessage = prompt.trim();
     setThinking(true);
-    setMessage(prompt);
+    setChatError('');
+    setMessage(nextMessage);
     setPrompt('');
-    window.setTimeout(() => setThinking(false), 1100);
+    try {
+      const response = await fetch('/api/chat', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ messages: [{ role: 'user', content: nextMessage }] }) });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error ?? 'The AI could not respond.');
+      setAiResponse(payload.text);
+    } catch (error) {
+      setChatError(error instanceof Error ? error.message : 'The AI could not respond.');
+    } finally {
+      setThinking(false);
+    }
   };
 
   return (
@@ -53,7 +66,7 @@ export default function Home() {
             <div className="analysis-strip"><div><span className="strip-icon"><Code2 size={15} /></span><span><b>OmniStore</b><small>TypeScript · Next.js · 86 files</small></span></div><span className="analysis-status"><i /> Analysis ready</span></div>
             <div className="chat-thread">
               <div className="message user-message"><span className="message-avatar user-avatar">A</span><div><small>YOU · 10:42 AM</small><p>{message || 'Review the authentication flow and tell me what I should improve before production.'}</p></div></div>
-              <div className="message ai-message"><span className="message-avatar ai-avatar"><Sparkles size={14} /></span><div><small>DEV DESK · DEEP ANALYSIS</small><p>I found a strong foundation. The auth boundary is clear, but the refresh-token path needs an explicit replay check. I also found three opportunities to reduce client-side bundle weight.</p><div className="insight"><span>01</span><p><b>Recommended next step</b><br />Move token rotation into a single server procedure and add a deterministic expiry test.</p><button>Open finding <ChevronDown size={13} /></button></div></div></div>
+              <div className="message ai-message"><span className="message-avatar ai-avatar"><Sparkles size={14} /></span><div><small>DEV DESK · DEEP ANALYSIS</small><p>{aiResponse}</p>{chatError && <p className="chat-error">{chatError}</p>}<div className="insight"><span>01</span><p><b>Recommended next step</b><br />Move token rotation into a single server procedure and add a deterministic expiry test.</p><button>Open finding <ChevronDown size={13} /></button></div></div></div>
               {thinking && <div className="thinking"><span><i /><i /><i /></span> Dev Desk is thinking through the repository...</div>}
             </div>
             <div className="composer-wrap"><div className="composer-tools"><button onClick={() => setShowUpload(true)}><Paperclip size={15} /> Attach</button><button><Mic size={15} /> Voice</button><span className="composer-hint">Ask about your project...</span><button className="send-button" onClick={sendPrompt}><Send size={16} /></button></div><textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendPrompt(); } }} placeholder="Ask DevDesk to explain, debug, or improve your code..." rows={2} /><div className="composer-footer"><span><WandSparkles size={13} /> DevDesk Thinking <ChevronDown size={12} /></span><small>Enter to send · Shift + Enter for a new line</small></div></div>

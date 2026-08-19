@@ -31,3 +31,8 @@
 - [x] Fix Vercel pnpm install failure by explicitly allowing the required esbuild build script
 - [x] Validate Vercel-style dependency installation and production build
 - [ ] Push the deployment fix and redeploy DevDesk AI
+
+- [ ] Audit the live Vercel deployment and environment readiness
+- [ ] Verify Supabase email sign-up, sign-in, logout, and callback behavior
+- [ ] Verify GitHub OAuth callback and repository listing prerequisites
+- [ ] Fix any production auth or connector issues found during audit
