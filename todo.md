@@ -36,3 +36,6 @@
 - [ ] Verify Supabase email sign-up, sign-in, logout, and callback behavior
 - [ ] Verify GitHub OAuth callback and repository listing prerequisites
 - [ ] Fix any production auth or connector issues found during audit
+
+- [ ] Fix mobile header overflow so the Sign in control remains visible on phone screens
+- [ ] Validate the repaired Sign in flow on the live Vercel website
