@@ -42,4 +42,4 @@
 
 - [x] Show an explicit Connected state after GitHub OAuth succeeds
 - [x] Redesign the mobile workspace so chat, starting a new chat, and history are immediately clear
-- [ ] Validate the revised GitHub and mobile workspace experience on the live Vercel website
+- [x] Validate the revised GitHub and mobile workspace experience on the live Vercel website
