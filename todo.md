@@ -72,4 +72,4 @@
 
 - [x] Add server-side ordered OpenRouter text-model fallback with safe failures and timeouts
 - [x] Add a consistent DevDesk AI identity instruction naming Abbas Hussain as creator
-- [ ] Validate real chat, fallback behavior, and identity response without client-side secrets
+- [x] Validate real chat, fallback behavior, and identity response without client-side secrets
