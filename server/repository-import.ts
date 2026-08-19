@@ -11,6 +11,13 @@ type GithubBlob = { encoding?: string; content?: string; size?: number };
 
 export type RepositoryImport = { files: ProjectFile[]; treeTruncated: boolean; skippedCount: number };
 
+export function prepareApprovedCommit(path: string, content: string) {
+  const file = buildProjectManifest([{ path, content }])[0];
+  if (!file) throw new Error('Only safe supported source files can be committed from DevDesk.');
+  if (Buffer.byteLength(content, 'utf8') > MAX_SOURCE_FILE_BYTES) throw new Error('This source file exceeds the safe commit limit.');
+  return file;
+}
+
 export function parseRepositoryFullName(fullName: string) {
   const match = /^([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+)$/.exec(fullName.trim());
   if (!match || match[1] === '.' || match[1] === '..' || match[2] === '.' || match[2] === '..') throw new Error('Repository name must use the owner/repository format.');

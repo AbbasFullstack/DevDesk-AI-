@@ -40,6 +40,16 @@ export async function githubApi<T>(token: string, path: string): Promise<T> {
   return response.json() as Promise<T>;
 }
 
+export async function githubRequest<T>(token: string, path: string, init: { method?: 'GET' | 'PUT'; body?: unknown } = {}): Promise<{ status: number; payload: T | undefined }> {
+  const response = await fetch(`https://api.github.com${path}`, {
+    method: init.method ?? 'GET', cache: 'no-store',
+    headers: { accept: 'application/vnd.github+json', authorization: `Bearer ${token}`, 'X-GitHub-Api-Version': '2022-11-28', ...(init.body ? { 'content-type': 'application/json' } : {}) },
+    ...(init.body ? { body: JSON.stringify(init.body) } : {}),
+  });
+  const payload = response.status === 204 ? undefined : await response.json().catch(() => undefined) as T | undefined;
+  return { status: response.status, payload };
+}
+
 export function githubAuthorizeUrl(state: string) {
   const url = new URL('https://github.com/login/oauth/authorize');
   url.searchParams.set('client_id', process.env.GITHUB_CLIENT_ID ?? '');

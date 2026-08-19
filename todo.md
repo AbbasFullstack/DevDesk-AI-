@@ -73,3 +73,8 @@
 - [x] Add server-side ordered OpenRouter text-model fallback with safe failures and timeouts
 - [x] Add a consistent DevDesk AI identity instruction naming Abbas Hussain as creator
 - [x] Validate real chat, fallback behavior, and identity response without client-side secrets
+
+- [x] Add a Projects workflow for authenticated users to create and manage real project records
+- [x] Add safe ZIP project import alongside existing connected GitHub repository import
+- [x] Add review-gated, owner-authorized GitHub file commit actions for selected changes only
+- [ ] Validate project creation, imports, analysis context, and protected GitHub write-back
