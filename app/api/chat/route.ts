@@ -20,6 +20,8 @@ export async function POST(request: Request) {
     ]);
     return NextResponse.json({ text });
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'The AI request failed.' }, { status: 502 });
+    const message = error instanceof Error ? error.message : 'The AI request failed.';
+    console.error('[devdesk-chat] provider request failed', { message, model: env.openRouterModel, keyConfigured: Boolean(env.openRouterApiKey) });
+    return NextResponse.json({ error: message }, { status: 502 });
   }
 }
