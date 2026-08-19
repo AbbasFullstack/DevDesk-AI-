@@ -39,3 +39,7 @@
 
 - [x] Fix mobile header overflow so the Sign in control remains visible on phone screens
 - [x] Validate the repaired Sign in flow on the live Vercel website
+
+- [x] Show an explicit Connected state after GitHub OAuth succeeds
+- [x] Redesign the mobile workspace so chat, starting a new chat, and history are immediately clear
+- [ ] Validate the revised GitHub and mobile workspace experience on the live Vercel website
