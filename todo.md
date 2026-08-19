@@ -63,5 +63,5 @@
 
 - [x] Replace the header logout icon with a three-line account menu
 - [x] Add account-menu shortcuts for chat history, projects, and account settings
-- [ ] Add authenticated password change, account switch, and logout actions
+- [x] Add authenticated password change, account switch, and logout actions
 - [ ] Validate the new mobile account menu and settings flow
