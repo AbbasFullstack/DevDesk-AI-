@@ -59,4 +59,4 @@
 
 - [x] Fix the mobile split-column layout, horizontal overflow, and squeezed chat content
 - [x] Stack project status below the chat and keep the mobile composer from covering workspace content
-- [ ] Validate the repaired phone layout on the live Vercel website
+- [x] Validate the repaired phone layout on the live Vercel website
