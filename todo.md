@@ -43,3 +43,7 @@
 - [x] Show an explicit Connected state after GitHub OAuth succeeds
 - [x] Redesign the mobile workspace so chat, starting a new chat, and history are immediately clear
 - [x] Validate the revised GitHub and mobile workspace experience on the live Vercel website
+
+- [x] Remove the hard-coded OmniStore project, fake analysis, and demo chat content
+- [x] Show only real connected GitHub repositories or an honest empty workspace state
+- [x] Validate the production workspace contains no fabricated project data
