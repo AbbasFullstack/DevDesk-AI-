@@ -9,7 +9,8 @@
     "build": "next build",
     "start": "next start",
     "check": "tsc --noEmit",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "tsx --test server/**/*.test.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",

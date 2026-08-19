@@ -47,3 +47,8 @@
 - [x] Remove the hard-coded OmniStore project, fake analysis, and demo chat content
 - [x] Show only real connected GitHub repositories or an honest empty workspace state
 - [x] Validate the production workspace contains no fabricated project data
+
+- [x] Import the selected GitHub repository's real safe source files server-side
+- [x] Analyze the imported source with explicit file evidence and no fabricated claims
+- [x] Display imported files and real analysis findings in the workspace
+- [x] Add deterministic tests for source import and repository authorization safeguards
