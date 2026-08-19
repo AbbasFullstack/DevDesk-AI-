@@ -52,3 +52,7 @@
 - [x] Analyze the imported source with explicit file evidence and no fabricated claims
 - [x] Display imported files and real analysis findings in the workspace
 - [x] Add deterministic tests for source import and repository authorization safeguards
+
+- [x] Upgrade the chat workspace to an advanced carbon-glass developer-tool interface
+- [x] Improve mobile message hierarchy, composer controls, and source-analysis presentation
+- [ ] Validate the premium chat UI on the production build and mobile layout
