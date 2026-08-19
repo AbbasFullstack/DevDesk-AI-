@@ -60,3 +60,8 @@
 - [x] Fix the mobile split-column layout, horizontal overflow, and squeezed chat content
 - [x] Stack project status below the chat and keep the mobile composer from covering workspace content
 - [x] Validate the repaired phone layout on the live Vercel website
+
+- [x] Replace the header logout icon with a three-line account menu
+- [x] Add account-menu shortcuts for chat history, projects, and account settings
+- [ ] Add authenticated password change, account switch, and logout actions
+- [ ] Validate the new mobile account menu and settings flow
