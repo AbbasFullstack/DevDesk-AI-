@@ -56,3 +56,7 @@
 - [x] Upgrade the chat workspace to an advanced carbon-glass developer-tool interface
 - [x] Improve mobile message hierarchy, composer controls, and source-analysis presentation
 - [x] Validate the premium chat UI on the production build and mobile layout
+
+- [x] Fix the mobile split-column layout, horizontal overflow, and squeezed chat content
+- [x] Stack project status below the chat and keep the mobile composer from covering workspace content
+- [ ] Validate the repaired phone layout on the live Vercel website
