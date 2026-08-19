@@ -2,6 +2,7 @@ import 'dotenv/config';
 
 export const env = {
   apiPort: Number(process.env.API_PORT ?? 3001),
+  appUrl: process.env.APP_URL ?? 'http://localhost:3000',
   supabaseUrl: process.env.SUPABASE_URL ?? '',
   supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY ?? '',
   openRouterApiKey: process.env.OPENROUTER_API_KEY ?? '',

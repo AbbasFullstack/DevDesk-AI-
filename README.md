@@ -28,3 +28,11 @@ Provider keys and Supabase service credentials must stay server-side. Uploaded p
 ## Portfolio checklist
 
 The finished project should include architecture documentation, database schema, typed API contracts, deterministic tests, a security model, responsive screenshots, an accessible empty state, and a clear deployment guide.
+
+## Auth and GitHub setup
+
+Create a Supabase project and set `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_URL`, and `SUPABASE_SERVICE_ROLE_KEY` in the deployment environment. Apply `supabase/schema.sql` in the Supabase SQL editor, then enable the required email/password provider. Add the deployed `/auth/callback` URL to Supabase's redirect allow list.
+
+For the repository connector, create a GitHub OAuth App whose callback URL is the deployed `APP_URL/api/github/callback`. Configure `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, and a unique 32-byte `TOKEN_ENCRYPTION_KEY` on the server. The OAuth state cookie is short-lived and httpOnly; the exchanged token is encrypted before it is stored in `github_connections`. The browser receives repository metadata only, never the token.
+
+For a Supabase GitHub sign-in provider, configure the GitHub provider inside Supabase separately. The Supabase provider callback is the Supabase project's `/auth/v1/callback`, while DevDesk's repository connector callback is the application callback above. These are intentionally separate flows: Supabase authenticates the DevDesk user, and the GitHub connector grants repository access.

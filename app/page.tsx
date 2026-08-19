@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { AuthControls } from './components/AuthControls';
 import { Bot, ChevronDown, Code2, FileArchive, FileCode2, GitBranch, ImagePlus, LayoutDashboard, Mic, Paperclip, Play, Plus, Search, Send, Settings2, ShieldCheck, Sparkles, UploadCloud, WandSparkles, X } from 'lucide-react';
 
 const nav = [
@@ -42,7 +43,7 @@ export default function Home() {
       </aside>
 
       <section className="workspace">
-        <header className="topbar"><div className="mobile-brand"><Sparkles size={16} /> DEV DESK</div><div className="project-switcher"><span className="project-dot" /> OmniStore / main <ChevronDown size={14} /></div><div className="top-actions"><button aria-label="Search"><Search size={17} /></button><button aria-label="Settings"><Settings2 size={17} /></button><span className="online"><i /> AI online</span></div></header>
+        <header className="topbar"><div className="mobile-brand"><Sparkles size={16} /> DEV DESK</div><div className="project-switcher"><span className="project-dot" /> OmniStore / main <ChevronDown size={14} /></div><div className="top-actions"><button aria-label="Search"><Search size={17} /></button><button aria-label="Settings"><Settings2 size={17} /></button><span className="online"><i /> AI online</span><AuthControls /></div></header>
 
         <div className="workspace-grid">
           <section className="chat-column">

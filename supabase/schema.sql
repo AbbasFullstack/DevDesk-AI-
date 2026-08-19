@@ -90,3 +90,17 @@ alter table analysis_findings enable row level security;
 alter table conversations enable row level security;
 alter table messages enable row level security;
 alter table usage_events enable row level security;
+
+create table if not exists github_connections (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null unique references profiles(id) on delete cascade,
+  github_user_id text not null,
+  github_login text not null,
+  avatar_url text,
+  encrypted_access_token text not null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table github_connections enable row level security;
+create policy "Users can view their own GitHub connection" on github_connections for select using (auth.uid() = user_id);

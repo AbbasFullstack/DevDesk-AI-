@@ -5,12 +5,18 @@
 - [x] Add initial Next.js UI with project chat, analysis summary, upload modal, and preview panel
 - [x] Add Express API health and validated analysis preview foundation
 - [x] Add Supabase and server-side AI environment contract without real secrets
-- [ ] Add Supabase auth and PostgreSQL schema
-- [ ] Add real ZIP/file ingestion with path traversal protection
+- [x] Add Supabase auth and PostgreSQL schema
+- [x] Add real ZIP/file ingestion with path traversal protection
 - [ ] Add GitHub repository connector with secure OAuth/token handling
-- [ ] Add server-side AI chat and staged deep-analysis jobs
+- [x] Add server-side AI chat and staged deep-analysis jobs
 - [ ] Add analysis findings, clarifying questions, and evidence-linked answers
 - [ ] Add restricted HTML/CSS/JS code preview workflow
 - [ ] Add voice prompt upload/transcription flow
 - [ ] Add usage limits, audit events, and error monitoring
 - [ ] Add deterministic tests, deployment guide, and portfolio screenshots
+
+- [ ] Add real Supabase browser auth session, sign in/up, logout, and protected dashboard state
+- [ ] Add GitHub OAuth start/callback flow with server-only client credentials
+- [ ] Store GitHub OAuth tokens securely server-side and associate them with the authenticated user
+- [ ] Fetch and display the authenticated user's accessible GitHub repositories
+- [ ] Validate OAuth state, redirects, session expiry, errors, and secret safety
