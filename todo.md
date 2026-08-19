@@ -69,3 +69,7 @@
 - [x] Make the mobile account menu fully opaque and legible above all workspace content
 - [x] Move main-screen current-chat and history controls into the three-line menu only
 - [ ] Validate the simplified menu-driven mobile chat navigation on Vercel
+
+- [x] Add server-side ordered OpenRouter text-model fallback with safe failures and timeouts
+- [x] Add a consistent DevDesk AI identity instruction naming Abbas Hussain as creator
+- [ ] Validate real chat, fallback behavior, and identity response without client-side secrets

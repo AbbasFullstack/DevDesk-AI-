@@ -25,12 +25,12 @@ export async function POST(request: Request) {
   if (runStart.error || !runStart.data) return NextResponse.json({ error: 'Could not start a source analysis run.' }, { status: 500 });
   const context = files.map((file) => `FILE: ${file.path}\n${file.excerpt ?? ''}`).join('\n\n').slice(0, env.maxInputCharacters);
   try {
-    const text = await askDevDesk([
+    const answer = await askDevDesk([
       { role: 'system', content: 'You are DevDesk AI, a precise senior engineer. Analyze only the imported source excerpts supplied below. Never claim to execute code or inspect files not supplied. Cite exact file paths when referring to evidence. Return concise sections: Understanding, Evidence, Findings, Questions, and Recommended next steps.' },
       { role: 'user', content: `Imported project: ${project.name}\nBranch: ${project.branch ?? 'default'}\nQuestion: ${input.data.question}\n\nImported source context:\n${context}` },
     ]);
-    await admin.from('analysis_runs').update({ status: 'complete', stage: 'complete', completed_at: new Date().toISOString() }).eq('id', runStart.data.id);
-    return NextResponse.json({ status: 'complete', analysisId: runStart.data.id, project: { id: project.id, name: project.name, branch: project.branch }, source: { fileCount: files.length, paths: files.map((file) => file.path) }, text });
+    await admin.from('analysis_runs').update({ status: 'complete', stage: 'complete', model: answer.model, completed_at: new Date().toISOString() }).eq('id', runStart.data.id);
+    return NextResponse.json({ status: 'complete', analysisId: runStart.data.id, project: { id: project.id, name: project.name, branch: project.branch }, source: { fileCount: files.length, paths: files.map((file) => file.path) }, text: answer.text, model: answer.model, fallbackUsed: answer.attempts.length > 0 });
   } catch (issue) {
     const message = issue instanceof Error ? issue.message : 'The analysis request failed.';
     await admin.from('analysis_runs').update({ status: 'failed', error_message: message, completed_at: new Date().toISOString() }).eq('id', runStart.data.id);
