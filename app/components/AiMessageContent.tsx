@@ -5,7 +5,7 @@ import { useState } from 'react';
 
 type Segment = { type: 'text'; value: string } | { type: 'code'; language: string; value: string };
 
-function splitFencedCode(content: string): Segment[] {
+export function splitFencedCode(content: string): Segment[] {
   const segments: Segment[] = [];
   const fence = /```([a-zA-Z0-9_+#.-]*)\s*\n?([\s\S]*?)```/g;
   let cursor = 0;

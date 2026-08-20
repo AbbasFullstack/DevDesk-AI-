@@ -120,4 +120,4 @@
 - [x] Bundle the DevDesk logo inside the deployed application and add a browser favicon
 - [x] Make Workspace, Projects, Analyses, and Connectors navigation controls open real useful views
 - [x] Render fenced AI code responses as syntax-colored copyable blocks with long-code overflow protection
-- [ ] Perform screenshot-led mobile QA for logo, navigation panels, and long code response rendering
+- [x] Perform screenshot-led mobile QA for logo, navigation panels, and long code response rendering
