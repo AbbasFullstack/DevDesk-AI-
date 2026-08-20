@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { browserImageFallbackUrl, freeImageAttempts, freeImageUrl, parseImageGenerationInput } from './image';
+import { browserImageFallbackUrl, freeImageAttempts, freeImageUrl, parseImageGenerationInput, safeImageSeed } from './image';
 
 test('image generation accepts bounded prompts and supported aspect ratios', () => {
   assert.deepEqual(parseImageGenerationInput({ prompt: 'A carbon-glass calculator landing page', aspectRatio: '9:16' }), {
@@ -38,4 +38,12 @@ test('the final browser delivery fallback remains server-generated, encoded, and
   assert.match(url, /height=504/);
   assert.match(url, /seed=99/);
   assert.doesNotMatch(url, /model=/);
+});
+
+test('image seeds are normalized to a positive provider-safe integer range', () => {
+  assert.equal(safeImageSeed(42), 42);
+  assert.equal(safeImageSeed(0), 1);
+  assert.ok(safeImageSeed(Date.now()) > 0);
+  assert.ok(safeImageSeed(Date.now()) < 2_147_483_647);
+  assert.equal(safeImageSeed(-42), 42);
 });

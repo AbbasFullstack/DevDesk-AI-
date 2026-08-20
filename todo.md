@@ -146,3 +146,4 @@
 - [ ] Verify authenticated Image Generation end-to-end, including progress statuses, free-provider fallback, success display, and retry errors
 - [ ] Verify Voice Call on Galaxy A21s, including Test voice, AI reply speech, microphone permission, languages, selected device voice, and recovery feedback
 - [x] Add a final browser-deliverable free image fallback after the two Vercel-side provider attempts are exhausted
+- [x] Normalize Pollinations image seeds to the provider-safe integer range so production image requests do not fail before generation starts

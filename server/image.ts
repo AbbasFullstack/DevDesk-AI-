@@ -1,5 +1,6 @@
 export const FREE_IMAGE_PROVIDER_LABEL = 'Pollinations free image endpoint';
 export const FREE_IMAGE_MODELS = ['sana', 'flux'] as const;
+const MAX_PROVIDER_SEED = 2_147_483_647;
 
 export type ImageGenerationInput = {
   prompt: string;
@@ -17,6 +18,11 @@ export function parseImageGenerationInput(value: unknown): ImageGenerationInput 
   return { prompt, aspectRatio: aspectRatio as ImageGenerationInput['aspectRatio'] };
 }
 
+export function safeImageSeed(seed: number) {
+  const normalized = Math.floor(Math.abs(seed)) % MAX_PROVIDER_SEED;
+  return normalized || 1;
+}
+
 export function freeImageUrl(input: ImageGenerationInput, seed: number, model: (typeof FREE_IMAGE_MODELS)[number] = 'sana') {
   const dimensions: Record<ImageGenerationInput['aspectRatio'], [string, string]> = {
     '1:1': ['768', '768'],
@@ -26,7 +32,7 @@ export function freeImageUrl(input: ImageGenerationInput, seed: number, model: (
     '9:16': ['504', '896'],
   };
   const [width, height] = dimensions[input.aspectRatio];
-  const query = new URLSearchParams({ width, height, seed: String(seed), nologo: 'true', model });
+  const query = new URLSearchParams({ width, height, seed: String(safeImageSeed(seed)), nologo: 'true', model });
   return `https://image.pollinations.ai/prompt/${encodeURIComponent(input.prompt)}?${query.toString()}`;
 }
 
@@ -43,6 +49,6 @@ export function browserImageFallbackUrl(input: ImageGenerationInput, seed: numbe
     '9:16': ['504', '896'],
   };
   const [width, height] = dimensions[input.aspectRatio];
-  const query = new URLSearchParams({ width, height, seed: String(seed), nologo: 'true' });
+  const query = new URLSearchParams({ width, height, seed: String(safeImageSeed(seed)), nologo: 'true' });
   return `https://image.pollinations.ai/prompt/${encodeURIComponent(input.prompt)}?${query.toString()}`;
 }
