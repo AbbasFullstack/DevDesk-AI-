@@ -110,3 +110,4 @@
 - [x] Prevent the public landing page from flickering or looping for an already authenticated session
 - [x] Remove deprecated v1 account-local conversation records during logout and initialization
 - [x] Purge all v1 conversation keys, including prior account-scoped keys, on public-page initialization
+- [x] Run a focused live GLM 5.2 primary, fallback recovery, and user-facing error validation for DevDesk AI chat
