@@ -6,14 +6,15 @@ import type { GitHubRepo } from './AuthControls';
 
 export type ImportedProjectRecord = { id: string; name: string; branch: string | null; status: string; source: { fileCount: number; treeTruncated?: boolean; skippedCount: number }; files: Array<{ path: string; language: string; byteSize: number }> };
 type ProjectSummary = { id: string; name: string; source_type: string; branch: string | null; status: string; created_at: string; updated_at: string };
-type Props = { open: boolean; onClose: () => void; selectedRepo?: GitHubRepo; importedProject?: ImportedProjectRecord; onImported: (value: { repo?: GitHubRepo; project: ImportedProjectRecord }) => void; onRemoved: (projectId: string) => void };
+type Props = { open: boolean; initialTab?: Tab; onClose: () => void; selectedRepo?: GitHubRepo; importedProject?: ImportedProjectRecord; onImported: (value: { repo?: GitHubRepo; project: ImportedProjectRecord }) => void; onRemoved: (projectId: string) => void };
 type Tab = 'create' | 'github' | 'zip' | 'manage' | 'commit';
 
-export function ProjectHub({ open, onClose, selectedRepo, importedProject, onImported, onRemoved }: Props) {
+export function ProjectHub({ open, initialTab = 'create', onClose, selectedRepo, importedProject, onImported, onRemoved }: Props) {
   const [tab, setTab] = useState<Tab>('create'); const [repos, setRepos] = useState<GitHubRepo[]>([]); const [projectName, setProjectName] = useState(''); const [archive, setArchive] = useState<File>();
   const [loading, setLoading] = useState(false); const [notice, setNotice] = useState(''); const [error, setError] = useState(''); const [filePath, setFilePath] = useState(''); const [fileContent, setFileContent] = useState(''); const [fileSha, setFileSha] = useState(''); const [commitMessage, setCommitMessage] = useState(''); const [approved, setApproved] = useState(false); const [projects, setProjects] = useState<ProjectSummary[]>([]); const [confirmRemovalId, setConfirmRemovalId] = useState<string>();
 
-  useEffect(() => { if (!open) return; setError(''); setNotice(''); if (tab === 'github') void loadRepos(); if (tab === 'manage') void loadProjects(); }, [open, tab]);
+  useEffect(() => { if (!open) return; setTab(initialTab); setError(''); setNotice(''); }, [open, initialTab]);
+  useEffect(() => { if (!open) return; if (tab === 'github') void loadRepos(); if (tab === 'manage') void loadProjects(); }, [open, tab]);
   async function apiJson(url: string, init?: RequestInit) { const response = await fetch(url, init); const payload = await response.json(); if (!response.ok) throw new Error(payload.error ?? 'Request failed.'); return payload; }
   async function loadRepos() { try { const payload = await apiJson('/api/github/repos'); setRepos(payload.repositories ?? []); } catch (issue) { setError(issue instanceof Error ? issue.message : 'Could not load GitHub repositories.'); } }
   async function loadProjects() { setLoading(true); try { const payload = await apiJson('/api/projects'); setProjects(payload.projects ?? []); } catch (issue) { setError(issue instanceof Error ? issue.message : 'Could not load projects.'); } finally { setLoading(false); } }
