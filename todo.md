@@ -127,3 +127,5 @@
 - [x] Add an authenticated server-side image-generation route with safe prompt validation
 - [x] Implement permission-aware browser voice call controls with clear device support feedback
 - [ ] Test code preview isolation, image generation, voice call, and mobile plus-menu behavior in production
+- [x] Replace the paid OpenRouter image route with a free no-balance server-side image provider
+- [ ] Validate one real free image generation and graceful provider errors in production

@@ -30,7 +30,6 @@ export const env = {
   supabaseUrl: process.env.SUPABASE_URL ?? '',
   supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY ?? '',
   openRouterApiKey: process.env.OPENROUTER_API_KEY ?? '',
-  openRouterImageModel: process.env.OPENROUTER_IMAGE_MODEL ?? 'google/gemini-2.5-flash-image',
   // GLM 5.2 is intentionally first for every DevDesk conversation.
   openRouterModel: GLM_PRIMARY_MODEL,
   openRouterFallbackModels: [...CURATED_FREE_OPENROUTER_FALLBACK_MODELS] as string[],

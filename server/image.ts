@@ -1,4 +1,4 @@
-export const DEFAULT_OPENROUTER_IMAGE_MODEL = 'google/gemini-2.5-flash-image';
+export const FREE_IMAGE_PROVIDER_LABEL = 'Pollinations free image endpoint';
 
 export type ImageGenerationInput = {
   prompt: string;
@@ -16,11 +16,15 @@ export function parseImageGenerationInput(value: unknown): ImageGenerationInput 
   return { prompt, aspectRatio: aspectRatio as ImageGenerationInput['aspectRatio'] };
 }
 
-export function imageGenerationPayload(input: ImageGenerationInput, model = process.env.OPENROUTER_IMAGE_MODEL || DEFAULT_OPENROUTER_IMAGE_MODEL) {
-  return {
-    model,
-    prompt: input.prompt,
-    aspect_ratio: input.aspectRatio,
-    n: 1,
+export function freeImageUrl(input: ImageGenerationInput, seed: number) {
+  const dimensions: Record<ImageGenerationInput['aspectRatio'], [string, string]> = {
+    '1:1': ['768', '768'],
+    '4:3': ['768', '576'],
+    '3:4': ['576', '768'],
+    '16:9': ['896', '504'],
+    '9:16': ['504', '896'],
   };
+  const [width, height] = dimensions[input.aspectRatio];
+  const query = new URLSearchParams({ width, height, seed: String(seed), nologo: 'true', model: 'flux' });
+  return `https://image.pollinations.ai/prompt/${encodeURIComponent(input.prompt)}?${query.toString()}`;
 }
