@@ -34,6 +34,9 @@ export default function VoiceCallPage() {
   const activeRef = useRef(false);
   const busyRef = useRef(false);
   const voicesRef = useRef<SpeechSynthesisVoice[]>([]);
+  const messagesRef = useRef<CallMessage[]>([]);
+
+  useEffect(() => { messagesRef.current = messages; }, [messages]);
 
   useEffect(() => {
     if (!('speechSynthesis' in window)) return;
@@ -63,7 +66,7 @@ export default function VoiceCallPage() {
       const userMessage: CallMessage = { role: 'user', content: transcript };
       setMessages((previous) => [...previous, userMessage]); setNotice('DevDesk is thinking…');
       try {
-        const response = await fetch('/api/chat', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ messages: [...messages, userMessage] }) });
+        const response = await fetch('/api/chat', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ messages: [...messagesRef.current, userMessage] }) });
         const payload = await response.json();
         if (!response.ok || !payload.text) throw new Error(payload.error ?? 'DevDesk could not respond.');
         const assistantMessage: CallMessage = { role: 'assistant', content: payload.text };
