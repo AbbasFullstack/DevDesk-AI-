@@ -145,7 +145,7 @@ test('chat returns the bounded no-key emergency response only after the GLM-firs
   }
 });
 
-test('chat routing returns a safe user-facing message only after every candidate fails', async () => {
+test('chat routing returns transparent continuity guidance instead of a retryable busy failure after every external provider fails', async () => {
   await withMockedOpenRouter([
     new Response('unavailable', { status: 503 }),
     new Response('unavailable', { status: 503 }),
@@ -153,9 +153,8 @@ test('chat routing returns a safe user-facing message only after every candidate
     new Response('unavailable', { status: 503 }),
     new Response('unavailable', { status: 503 }),
   ], async () => {
-    await assert.rejects(
-      askDevDesk([{ role: 'user', content: 'Test unavailable providers.' }]),
-      /DevDesk AI is temporarily busy\. Please try again in a moment\./,
-    );
+    const answer = await askDevDesk([{ role: 'user', content: 'Write a TypeScript function while providers are unavailable.' }]);
+    assert.equal(answer.model, 'continuity/provider-capacity');
+    assert.match(answer.text, /will not invent unverified code/i);
   });
 });

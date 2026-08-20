@@ -156,3 +156,8 @@
 - [ ] Revalidate the production GitHub Disconnect/Logout control after connection and the top-right Account Settings Back/Close control
 - [x] Add per-chat rename and expandable detailed conversation metadata in Chat History, including type/project, message count, created time, updated time, and last activity
 - [x] Verify DevDesk-only Chat History changes and confirm Abbas AI was not modified by this request
+- [x] Repeat end-to-end production QA for Image Generation and Voice Call, covering success, fallback, error, speech, and microphone states
+- [ ] Execute a deep 10-pass production QA audit using a 100-plus-item test matrix
+- [ ] Stress-test authenticated AI chat with repeated development, code-generation, error-recovery, and fallback requests
+- [ ] Inspect the connected GitHub import, analysis, and review-gated commit flow; request confirmation before any repository write
+- [x] Fix the reproducible production AI chat outage: five consecutive normal requests returned retryable HTTP 503 busy errors

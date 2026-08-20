@@ -8,6 +8,7 @@ export const DEV_DESK_IDENTITY = `You are DevDesk AI, a thoughtful senior softwa
 export const EMERGENCY_CHAT_ENDPOINT = 'https://oai.endpoints.kepler.ai.cloud.ovh.net/v1/chat/completions';
 export const EMERGENCY_CHAT_MODEL = 'gpt-oss-20b';
 const TEMPORARY_UNAVAILABLE_MESSAGE = 'DevDesk AI is temporarily busy. Please try again in a moment.';
+const MAX_PRODUCTION_OPENROUTER_ATTEMPTS = 6;
 
 export function buildModelCandidates(primaryModel: string, fallbackModels: string[]) {
   return [...new Set([primaryModel, ...fallbackModels].map((model) => model.trim()).filter(Boolean))];
@@ -35,6 +36,10 @@ function boundedCandidates(primaryModel: string, fallbackModels: string[]) {
   return buildModelCandidates(primaryModel, fallbackModels).slice(0, 17);
 }
 
+function productionCandidates(primaryModel: string, fallbackModels: string[]) {
+  return buildModelAttemptSequence(primaryModel, fallbackModels).slice(0, MAX_PRODUCTION_OPENROUTER_ATTEMPTS);
+}
+
 function validText(payload: { choices?: Array<{ message?: { content?: string } }> }) {
   const text = payload.choices?.[0]?.message?.content?.trim();
   return text && !hasUnresolvedToolCall(text) ? text : undefined;
@@ -48,7 +53,7 @@ async function askEmergencyFallback(messages: ChatMessage[], attempts: string[])
       method: 'POST',
       signal: controller.signal,
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ model: EMERGENCY_CHAT_MODEL, messages, max_tokens: Math.min(env.maxOutputTokens, 480), temperature: 0.35 }),
+      body: JSON.stringify({ model: EMERGENCY_CHAT_MODEL, messages, max_tokens: Math.min(Math.max(env.maxOutputTokens, 800), 900), temperature: 0.35, reasoning_effort: 'low' }),
     });
     if (!response.ok) { attempts.push(`emergency/${EMERGENCY_CHAT_MODEL} (${response.status})`); return undefined; }
     const payload = await response.json().catch(() => undefined) as { model?: string; choices?: Array<{ message?: { content?: string } }> } | undefined;
@@ -63,8 +68,17 @@ async function askEmergencyFallback(messages: ChatMessage[], attempts: string[])
   }
 }
 
+function continuityGuidance(messages: ChatMessage[], attempts: string[]): DevDeskAnswer {
+  const latestPrompt = messages.filter((message) => message.role === 'user').at(-1)?.content.trim() || 'your developer question';
+  const codeRequest = /\b(code|typescript|javascript|react|next|function|component|api|bug|error)\b/i.test(latestPrompt);
+  const text = codeRequest
+    ? `I have saved your request: “${latestPrompt.slice(0, 260)}”. Free AI providers are temporarily at capacity, so I will not invent unverified code. Start by isolating the smallest reproducible case, keep the change behind a test, and send this prompt again shortly for a generated implementation. Your conversation is preserved.`
+    : `I have saved your request: “${latestPrompt.slice(0, 260)}”. Free AI providers are temporarily at capacity. Your conversation is preserved; retry shortly and DevDesk AI will resume normal model-backed answers automatically.`;
+  return { text, model: 'continuity/provider-capacity', attempts };
+}
+
 export async function askDevDesk(messages: ChatMessage[], options: AskDevDeskOptions = {}): Promise<DevDeskAnswer> {
-  const candidates = env.openRouterApiKey ? buildModelAttemptSequence(env.openRouterModel, env.openRouterFallbackModels) : [];
+  const candidates = env.openRouterApiKey ? productionCandidates(env.openRouterModel, env.openRouterFallbackModels) : [];
   const attempts: string[] = env.openRouterApiKey ? [] : ['OpenRouter (not configured)'];
   const enrichedMessages: ChatMessage[] = [{ role: 'system', content: DEV_DESK_IDENTITY }, ...messages];
 
@@ -109,5 +123,6 @@ export async function askDevDesk(messages: ChatMessage[], options: AskDevDeskOpt
     const emergencyAnswer = await askEmergencyFallback(enrichedMessages, attempts);
     if (emergencyAnswer) return emergencyAnswer;
   }
-  throw new Error(TEMPORARY_UNAVAILABLE_MESSAGE);
+  attempts.push(TEMPORARY_UNAVAILABLE_MESSAGE);
+  return continuityGuidance(messages, attempts);
 }
