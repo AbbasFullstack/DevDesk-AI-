@@ -133,3 +133,6 @@
 - [x] Add language-aware device voice selection and Girl/Boy/Man/Woman/Adult/Senior speaking-style preferences
 - [x] Implement continuous voice turn-taking with microphone recognition and AI speech playback
 - [ ] Test the dedicated mobile voice-call flow, available voices, language playback, and permission errors
+- [x] Persist each New chat as an independent account-scoped history entry and retain its complete messages
+- [x] Audit and harden provider-busy retries so a normal DevDesk AI chat recovers through the fallback chain
+- [ ] Validate multiple saved chats and live busy-error recovery in production

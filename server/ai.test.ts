@@ -44,6 +44,13 @@ test('GLM 5.2 receives one bounded retry before other fallback models', () => {
   );
 });
 
+test('OpenRouter free routing is prioritized immediately after the required GLM retry', () => {
+  assert.deepEqual(
+    buildModelAttemptSequence('z-ai/glm-5.2:free', ['first-fallback:free', 'openrouter/free', 'second-fallback:free']),
+    ['z-ai/glm-5.2:free', 'z-ai/glm-5.2:free', 'openrouter/free', 'first-fallback:free', 'second-fallback:free'],
+  );
+});
+
 test('DevDesk preserves GLM 5.2 first with 15-plus curated free fallback models', () => {
   const candidates = buildModelCandidates(GLM_PRIMARY_MODEL, [...CURATED_FREE_OPENROUTER_FALLBACK_MODELS]);
   assert.equal(env.openRouterModel, GLM_PRIMARY_MODEL);

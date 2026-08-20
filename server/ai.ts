@@ -13,10 +13,13 @@ export function buildModelCandidates(primaryModel: string, fallbackModels: strin
 export function buildModelAttemptSequence(primaryModel: string, fallbackModels: string[]) {
   const candidates = boundedCandidates(primaryModel, fallbackModels);
   const [first, ...fallbacks] = candidates;
+  const freeRouterIndex = fallbacks.indexOf('openrouter/free');
+  const freeRouter = freeRouterIndex >= 0 ? fallbacks[freeRouterIndex] : undefined;
+  const specificFallbacks = freeRouter ? fallbacks.filter((model) => model !== freeRouter) : fallbacks;
   // GLM 5.2 free can occasionally reject the first provider attempt and then
   // respond immediately on a retry. Give the requested primary model one more
   // bounded chance before consuming the fallback chain.
-  return first === GLM_PRIMARY_MODEL ? [first, first, ...fallbacks] : candidates;
+  return first === GLM_PRIMARY_MODEL ? [first, first, ...(freeRouter ? [freeRouter] : []), ...specificFallbacks] : candidates;
 }
 
 export function hasUnresolvedToolCall(text: string) {
