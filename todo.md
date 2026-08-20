@@ -83,7 +83,7 @@
 - [x] Run QA pass two: Projects, imports, source analysis, owner isolation, and commit protections
 - [x] Fix all reproducible defects found during the audit and retest affected flows
 - [x] Run QA pass three: regression, security guard, and production mobile verification
-- [ ] Deliver the final QA checklist with verified items, fixes, blockers, and user-only tests
+- [x] Deliver the final QA checklist with verified items, fixes, blockers, and user-only tests
 
 - [x] Fix cross-account exposure of browser-local chat history discovered during production QA
 - [x] Retest account switching to confirm each user sees only their own local conversation history
@@ -91,3 +91,8 @@
 - [x] Require a DevDesk session before starting GitHub OAuth to avoid unnecessary unauthenticated provider redirects
 
 - [x] Prevent fallback models from returning unresolved tool-call syntax in source analysis and retest real evidence-backed answers
+
+- [ ] Perform the user-approved harmless `devdesk-qa-check.txt` commit test in Muneeza2071/AbbasAI
+- [ ] Verify the resulting AbbasAI GitHub commit and report the write-back result
+
+- [ ] Allow review-gated GitHub commits to create a safe new source file when no existing file SHA is supplied
