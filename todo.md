@@ -108,3 +108,4 @@
 - [x] Hide empty project status, no-project, and code-preview dashboard panels until a real workflow makes them relevant
 - [ ] Validate multi-turn chat, logout cleanup, landing-to-auth flow, and conditional dashboard panels in production
 - [x] Prevent the public landing page from flickering or looping for an already authenticated session
+- [x] Remove deprecated v1 account-local conversation records during logout and initialization
