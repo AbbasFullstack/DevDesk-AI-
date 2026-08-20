@@ -112,4 +112,4 @@
 - [x] Purge all v1 conversation keys, including prior account-scoped keys, on public-page initialization
 - [x] Run a focused live GLM 5.2 primary, fallback recovery, and user-facing error validation for DevDesk AI chat
 - [x] Retry z-ai/glm-5.2:free once for transient first-response failures before continuing to other fallback models
-- [ ] Verify the live retry-first GLM 5.2 behavior and fallback recovery in production
+- [x] Verify the live retry-first GLM 5.2 behavior and fallback recovery in production
