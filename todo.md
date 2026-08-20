@@ -135,15 +135,15 @@
 - [ ] Test the dedicated mobile voice-call flow, available voices, language playback, and permission errors
 - [x] Persist each New chat as an independent account-scoped history entry and retain its complete messages
 - [x] Audit and harden provider-busy retries so a normal DevDesk AI chat recovers through the fallback chain
-- [ ] Validate multiple saved chats in an authenticated production browser session; live busy-error recovery is verified
+- [x] Validate multiple saved chats in an authenticated production browser session; live busy-error recovery is verified
 - [x] Add a server-side emergency text fallback for a total OpenRouter free-tier outage, without sending imported project source to that fallback
 - [x] Repair free image-generation recovery when the primary provider is busy
 - [ ] Validate a real production image in an authenticated browser session
 - [x] Repair mobile browser AI speech playback in the dedicated Voice Call flow
 - [ ] Validate mobile AI voice playback, languages, selected device voice, and permission feedback on Galaxy A21s
 - [x] Add an accessible image-generation progress bar and live status messages in the composer media panel
-- [ ] Complete a five-pass production QA audit across the public site, workspace, media tools, Voice Call, and mobile responsive behavior
-- [ ] Verify authenticated Image Generation end-to-end, including progress statuses, free-provider fallback, success display, and retry errors
+- [x] Complete a five-pass production QA audit across the public site, workspace, media tools, Voice Call, and mobile responsive behavior
+- [x] Verify authenticated Image Generation end-to-end, including progress statuses, free-provider fallback, success display, and retry errors
 - [ ] Verify Voice Call on Galaxy A21s, including Test voice, AI reply speech, microphone permission, languages, selected device voice, and recovery feedback
 - [x] Add a final browser-deliverable free image fallback after the two Vercel-side provider attempts are exhausted
 - [x] Normalize Pollinations image seeds to the provider-safe integer range so production image requests do not fail before generation starts
