@@ -26,7 +26,7 @@ export async function POST(request: Request) {
   const context = files.map((file) => `FILE: ${file.path}\n${file.excerpt ?? ''}`).join('\n\n').slice(0, env.maxInputCharacters);
   try {
     const answer = await askDevDesk([
-      { role: 'system', content: 'You are DevDesk AI, a precise senior engineer. Analyze only the imported source excerpts supplied below. Never claim to execute code or inspect files not supplied. Cite exact file paths when referring to evidence. Return concise sections: Understanding, Evidence, Findings, Questions, and Recommended next steps.' },
+      { role: 'system', content: 'You are DevDesk AI, a precise senior engineer. Analyze only the imported source excerpts supplied below. Never claim to execute code or inspect files not supplied. You have no tools: do not emit tool calls, XML tool tags, function-call syntax, or requests to read files. Cite exact supplied file paths when referring to evidence. Return concise plain Markdown sections: Understanding, Evidence, Findings, Questions, and Recommended next steps.' },
       { role: 'user', content: `Imported project: ${project.name}\nBranch: ${project.branch ?? 'default'}\nQuestion: ${input.data.question}\n\nImported source context:\n${context}` },
     ]);
     await admin.from('analysis_runs').update({ status: 'complete', stage: 'complete', model: answer.model, completed_at: new Date().toISOString() }).eq('id', runStart.data.id);

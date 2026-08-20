@@ -89,3 +89,5 @@
 - [ ] Retest account switching to confirm each user sees only their own local conversation history
 
 - [ ] Require a DevDesk session before starting GitHub OAuth to avoid unnecessary unauthenticated provider redirects
+
+- [ ] Prevent fallback models from returning unresolved tool-call syntax in source analysis and retest real evidence-backed answers

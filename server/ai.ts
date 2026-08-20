@@ -10,6 +10,10 @@ export function buildModelCandidates(primaryModel: string, fallbackModels: strin
   return [...new Set([primaryModel, ...fallbackModels].map((model) => model.trim()).filter(Boolean))];
 }
 
+export function hasUnresolvedToolCall(text: string) {
+  return /<\|tool_call_(?:start|end)\|>|<tool_call|\[?(?:read_file|write_file|edit_file)\(path=/i.test(text);
+}
+
 export async function askDevDesk(messages: ChatMessage[]): Promise<DevDeskAnswer> {
   if (!env.openRouterApiKey) throw new Error('AI provider is not configured on the server. Add OPENROUTER_API_KEY to the server environment.');
   const candidates = buildModelCandidates(env.openRouterModel, env.openRouterFallbackModels);
@@ -35,6 +39,7 @@ export async function askDevDesk(messages: ChatMessage[]): Promise<DevDeskAnswer
       const payload = await response.json() as { model?: string; choices?: Array<{ message?: { content?: string } }> };
       const text = payload.choices?.[0]?.message?.content?.trim();
       if (!text) { attempts.push(`${model} (empty response)`); continue; }
+      if (hasUnresolvedToolCall(text)) { attempts.push(`${model} (unresolved tool call)`); continue; }
       return { text, model: payload.model ?? model, attempts };
     } catch (issue) {
       if (issue instanceof Error && issue.name === 'AbortError') { attempts.push(`${model} (timeout)`); continue; }
