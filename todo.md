@@ -92,7 +92,7 @@
 
 - [x] Prevent fallback models from returning unresolved tool-call syntax in source analysis and retest real evidence-backed answers
 
-- [ ] Perform the user-approved harmless `devdesk-qa-check.txt` commit test in Muneeza2071/AbbasAI
-- [ ] Verify the resulting AbbasAI GitHub commit and report the write-back result
+- [x] Perform the user-approved harmless `DEV_DESK_QA_CHECK.md` commit test in Muneeza2071/AbbasAI
+- [x] Verify the resulting AbbasAI GitHub commit and report the write-back result
 
-- [ ] Allow review-gated GitHub commits to create a safe new source file when no existing file SHA is supplied
+- [x] Allow review-gated GitHub commits to create a safe new source file when no existing file SHA is supplied
