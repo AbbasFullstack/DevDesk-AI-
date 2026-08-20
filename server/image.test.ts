@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { freeImageUrl, parseImageGenerationInput } from './image';
+import { freeImageAttempts, freeImageUrl, parseImageGenerationInput } from './image';
 
 test('image generation accepts bounded prompts and supported aspect ratios', () => {
   assert.deepEqual(parseImageGenerationInput({ prompt: 'A carbon-glass calculator landing page', aspectRatio: '9:16' }), {
@@ -21,4 +21,12 @@ test('free image generation builds an encoded server-side provider URL with boun
   assert.match(url, /height=896/);
   assert.match(url, /seed=42/);
   assert.match(url, /nologo=true/);
+  assert.match(url, /model=sana/);
+});
+
+test('free image generation tries the currently advertised Sana model before the verified Flux fallback', () => {
+  const attempts = freeImageAttempts({ prompt: 'A reliable developer image generator', aspectRatio: '1:1' }, 42);
+  assert.deepEqual(attempts.map((attempt) => attempt.model), ['sana', 'flux']);
+  assert.match(attempts[1]?.url ?? '', /seed=43/);
+  assert.match(attempts[1]?.url ?? '', /model=flux/);
 });

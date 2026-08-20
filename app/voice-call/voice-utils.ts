@@ -37,3 +37,17 @@ export function preferredVoiceTerms(style: VoiceStyle) {
   if (style === 'senior') return ['grand', 'elder', 'old', 'mature'];
   return [];
 }
+
+export function selectDeviceVoice(voices: SpeechSynthesisVoice[], language: string, style: VoiceStyle, selectedName = '') {
+  const exact = voices.find((voice) => voice.name === selectedName);
+  if (exact) return exact;
+  const target = language.toLowerCase().split('-')[0];
+  const languageMatches = voices.filter((voice) => voice.lang.toLowerCase().startsWith(target));
+  const pool = languageMatches.length ? languageMatches : voices;
+  const terms = preferredVoiceTerms(style);
+  return pool.find((voice) => terms.some((term) => voice.name.toLowerCase().includes(term))) ?? pool[0];
+}
+
+export function voicePreviewText(language: string) {
+  return language.toLowerCase().startsWith('ur') ? 'DevDesk AI tayyar hai. Aap bol sakte hain.' : 'DevDesk AI is ready. You can start speaking.';
+}

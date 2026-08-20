@@ -137,3 +137,7 @@
 - [x] Audit and harden provider-busy retries so a normal DevDesk AI chat recovers through the fallback chain
 - [ ] Validate multiple saved chats in an authenticated production browser session; live busy-error recovery is verified
 - [x] Add a server-side emergency text fallback for a total OpenRouter free-tier outage, without sending imported project source to that fallback
+- [x] Repair free image-generation recovery when the primary provider is busy
+- [ ] Validate a real production image in an authenticated browser session
+- [x] Repair mobile browser AI speech playback in the dedicated Voice Call flow
+- [ ] Validate mobile AI voice playback, languages, selected device voice, and permission feedback on Galaxy A21s

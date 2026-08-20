@@ -1,4 +1,5 @@
 export const FREE_IMAGE_PROVIDER_LABEL = 'Pollinations free image endpoint';
+export const FREE_IMAGE_MODELS = ['sana', 'flux'] as const;
 
 export type ImageGenerationInput = {
   prompt: string;
@@ -16,7 +17,7 @@ export function parseImageGenerationInput(value: unknown): ImageGenerationInput 
   return { prompt, aspectRatio: aspectRatio as ImageGenerationInput['aspectRatio'] };
 }
 
-export function freeImageUrl(input: ImageGenerationInput, seed: number) {
+export function freeImageUrl(input: ImageGenerationInput, seed: number, model: (typeof FREE_IMAGE_MODELS)[number] = 'sana') {
   const dimensions: Record<ImageGenerationInput['aspectRatio'], [string, string]> = {
     '1:1': ['768', '768'],
     '4:3': ['768', '576'],
@@ -25,6 +26,10 @@ export function freeImageUrl(input: ImageGenerationInput, seed: number) {
     '9:16': ['504', '896'],
   };
   const [width, height] = dimensions[input.aspectRatio];
-  const query = new URLSearchParams({ width, height, seed: String(seed), nologo: 'true', model: 'flux' });
+  const query = new URLSearchParams({ width, height, seed: String(seed), nologo: 'true', model });
   return `https://image.pollinations.ai/prompt/${encodeURIComponent(input.prompt)}?${query.toString()}`;
+}
+
+export function freeImageAttempts(input: ImageGenerationInput, seed: number) {
+  return FREE_IMAGE_MODELS.map((model, index) => ({ model, url: freeImageUrl(input, seed + index, model) }));
 }

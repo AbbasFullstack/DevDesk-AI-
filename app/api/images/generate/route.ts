@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
-import { freeImageUrl, parseImageGenerationInput } from '@/server/image';
+import { freeImageAttempts, parseImageGenerationInput } from '@/server/image';
 
 export const maxDuration = 60;
 
@@ -11,12 +11,21 @@ export async function POST(request: Request) {
   if (!user) return NextResponse.json({ error: 'Sign in to generate an image.' }, { status: 401 });
   try {
     const input = parseImageGenerationInput(await request.json());
-    const upstream = await fetch(freeImageUrl(input, Date.now()), { cache: 'no-store', signal: AbortSignal.timeout(55_000) });
-    const mediaType = upstream.headers.get('content-type')?.split(';')[0] ?? '';
-    if (!upstream.ok || !/^image\/(png|jpeg|webp)$/.test(mediaType)) return NextResponse.json({ error: 'The free image service is busy. Please retry in a moment.' }, { status: 502 });
-    const bytes = Buffer.from(await upstream.arrayBuffer());
-    if (!bytes.length || bytes.length > 5_000_000) return NextResponse.json({ error: 'The free image service returned an unsafe image size. Please retry.' }, { status: 502 });
-    return NextResponse.json({ imageDataUrl: `data:${mediaType};base64,${bytes.toString('base64')}`, mediaType, provider: 'free' });
+    const attemptedModels: string[] = [];
+    for (const attempt of freeImageAttempts(input, Date.now())) {
+      attemptedModels.push(attempt.model);
+      try {
+        const upstream = await fetch(attempt.url, { cache: 'no-store', signal: AbortSignal.timeout(24_000) });
+        const mediaType = upstream.headers.get('content-type')?.split(';')[0] ?? '';
+        if (!upstream.ok || !/^image\/(png|jpeg|webp)$/.test(mediaType)) continue;
+        const bytes = Buffer.from(await upstream.arrayBuffer());
+        if (!bytes.length || bytes.length > 5_000_000) continue;
+        return NextResponse.json({ imageDataUrl: `data:${mediaType};base64,${bytes.toString('base64')}`, mediaType, provider: `pollinations/${attempt.model}`, fallbackUsed: attemptedModels.length > 1 });
+      } catch {
+        // A busy/free provider can fail transiently. Try the next verified model.
+      }
+    }
+    return NextResponse.json({ error: 'Free image models are temporarily busy. Please retry in a moment.', retryable: true }, { status: 502 });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Image generation could not start.';
     const status = /prompt|aspect ratio|characters/.test(message) ? 400 : 502;
