@@ -113,3 +113,7 @@
 - [x] Run a focused live GLM 5.2 primary, fallback recovery, and user-facing error validation for DevDesk AI chat
 - [x] Retry z-ai/glm-5.2:free once for transient first-response failures before continuing to other fallback models
 - [x] Verify the live retry-first GLM 5.2 behavior and fallback recovery in production
+- [x] Add authenticated owner-scoped project removal with explicit confirmation and workspace cleanup
+- [x] Add GitHub repository selector, import action, and disconnect/import-clear action to the chat composer
+- [x] Replace the Voice placeholder with working browser voice dictation and clear permission/support feedback
+- [ ] Test project removal, composer repository controls, voice dictation, and mobile layout in production
