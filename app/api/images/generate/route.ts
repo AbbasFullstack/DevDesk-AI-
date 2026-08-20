@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
-import { freeImageAttempts, parseImageGenerationInput } from '@/server/image';
+import { browserImageFallbackUrl, freeImageAttempts, parseImageGenerationInput } from '@/server/image';
 
 export const maxDuration = 60;
 
@@ -25,7 +25,12 @@ export async function POST(request: Request) {
         // A busy/free provider can fail transiently. Try the next verified model.
       }
     }
-    return NextResponse.json({ error: 'Free image models are temporarily busy. Please retry in a moment.', retryable: true }, { status: 502 });
+    return NextResponse.json({
+      imageUrl: browserImageFallbackUrl(input, Date.now()),
+      provider: 'pollinations/browser-delivery',
+      fallbackUsed: true,
+      browserFallback: true,
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Image generation could not start.';
     const status = /prompt|aspect ratio|characters/.test(message) ? 400 : 502;

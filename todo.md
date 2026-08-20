@@ -142,3 +142,7 @@
 - [x] Repair mobile browser AI speech playback in the dedicated Voice Call flow
 - [ ] Validate mobile AI voice playback, languages, selected device voice, and permission feedback on Galaxy A21s
 - [x] Add an accessible image-generation progress bar and live status messages in the composer media panel
+- [ ] Complete a five-pass production QA audit across the public site, workspace, media tools, Voice Call, and mobile responsive behavior
+- [ ] Verify authenticated Image Generation end-to-end, including progress statuses, free-provider fallback, success display, and retry errors
+- [ ] Verify Voice Call on Galaxy A21s, including Test voice, AI reply speech, microphone permission, languages, selected device voice, and recovery feedback
+- [x] Add a final browser-deliverable free image fallback after the two Vercel-side provider attempts are exhausted

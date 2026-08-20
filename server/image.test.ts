@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { freeImageAttempts, freeImageUrl, parseImageGenerationInput } from './image';
+import { browserImageFallbackUrl, freeImageAttempts, freeImageUrl, parseImageGenerationInput } from './image';
 
 test('image generation accepts bounded prompts and supported aspect ratios', () => {
   assert.deepEqual(parseImageGenerationInput({ prompt: 'A carbon-glass calculator landing page', aspectRatio: '9:16' }), {
@@ -29,4 +29,13 @@ test('free image generation tries the currently advertised Sana model before the
   assert.deepEqual(attempts.map((attempt) => attempt.model), ['sana', 'flux']);
   assert.match(attempts[1]?.url ?? '', /seed=43/);
   assert.match(attempts[1]?.url ?? '', /model=flux/);
+});
+
+test('the final browser delivery fallback remains server-generated, encoded, and model-agnostic', () => {
+  const url = browserImageFallbackUrl({ prompt: 'Carbon glass & glow', aspectRatio: '16:9' }, 99);
+  assert.match(url, /^https:\/\/image\.pollinations\.ai\/prompt\/Carbon%20glass%20%26%20glow\?/);
+  assert.match(url, /width=896/);
+  assert.match(url, /height=504/);
+  assert.match(url, /seed=99/);
+  assert.doesNotMatch(url, /model=/);
 });

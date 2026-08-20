@@ -33,3 +33,16 @@ export function freeImageUrl(input: ImageGenerationInput, seed: number, model: (
 export function freeImageAttempts(input: ImageGenerationInput, seed: number) {
   return FREE_IMAGE_MODELS.map((model, index) => ({ model, url: freeImageUrl(input, seed + index, model) }));
 }
+
+export function browserImageFallbackUrl(input: ImageGenerationInput, seed: number) {
+  const dimensions: Record<ImageGenerationInput['aspectRatio'], [string, string]> = {
+    '1:1': ['768', '768'],
+    '4:3': ['768', '576'],
+    '3:4': ['576', '768'],
+    '16:9': ['896', '504'],
+    '9:16': ['504', '896'],
+  };
+  const [width, height] = dimensions[input.aspectRatio];
+  const query = new URLSearchParams({ width, height, seed: String(seed), nologo: 'true' });
+  return `https://image.pollinations.ai/prompt/${encodeURIComponent(input.prompt)}?${query.toString()}`;
+}
