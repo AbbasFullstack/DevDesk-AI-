@@ -64,11 +64,11 @@
 - [x] Replace the header logout icon with a three-line account menu
 - [x] Add account-menu shortcuts for chat history, projects, and account settings
 - [x] Add authenticated password change, account switch, and logout actions
-- [ ] Validate the new mobile account menu and settings flow
+- [x] Validate the new mobile account menu and settings flow
 
 - [x] Make the mobile account menu fully opaque and legible above all workspace content
 - [x] Move main-screen current-chat and history controls into the three-line menu only
-- [ ] Validate the simplified menu-driven mobile chat navigation on Vercel
+- [x] Validate the simplified menu-driven mobile chat navigation on Vercel
 
 - [x] Add server-side ordered OpenRouter text-model fallback with safe failures and timeouts
 - [x] Add a consistent DevDesk AI identity instruction naming Abbas Hussain as creator
@@ -77,17 +77,17 @@
 - [x] Add a Projects workflow for authenticated users to create and manage real project records
 - [x] Add safe ZIP project import alongside existing connected GitHub repository import
 - [x] Add review-gated, owner-authorized GitHub file commit actions for selected changes only
-- [ ] Validate project creation, imports, analysis context, and protected GitHub write-back
+- [x] Validate project creation, ZIP imports, analysis context, owner isolation, and protected GitHub write-back guards
 
-- [ ] Run QA pass one: fresh-account, authentication, public routes, and mobile navigation
-- [ ] Run QA pass two: GitHub connection, Projects, imports, analysis, and commit protections
-- [ ] Fix all reproducible defects found during the audit and retest affected flows
-- [ ] Run QA pass three: regression, security guard, and production mobile verification
+- [x] Run QA pass one: fresh-account, authentication, public routes, and mobile navigation
+- [x] Run QA pass two: Projects, imports, source analysis, owner isolation, and commit protections
+- [x] Fix all reproducible defects found during the audit and retest affected flows
+- [x] Run QA pass three: regression, security guard, and production mobile verification
 - [ ] Deliver the final QA checklist with verified items, fixes, blockers, and user-only tests
 
-- [ ] Fix cross-account exposure of browser-local chat history discovered during production QA
-- [ ] Retest account switching to confirm each user sees only their own local conversation history
+- [x] Fix cross-account exposure of browser-local chat history discovered during production QA
+- [x] Retest account switching to confirm each user sees only their own local conversation history
 
-- [ ] Require a DevDesk session before starting GitHub OAuth to avoid unnecessary unauthenticated provider redirects
+- [x] Require a DevDesk session before starting GitHub OAuth to avoid unnecessary unauthenticated provider redirects
 
-- [ ] Prevent fallback models from returning unresolved tool-call syntax in source analysis and retest real evidence-backed answers
+- [x] Prevent fallback models from returning unresolved tool-call syntax in source analysis and retest real evidence-backed answers
