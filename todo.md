@@ -129,3 +129,7 @@
 - [ ] Test code preview isolation, image generation, voice call, and mobile plus-menu behavior in production
 - [x] Replace the paid OpenRouter image route with a free no-balance server-side image provider
 - [x] Validate one real free image generation and graceful provider errors in production
+- [x] Build a dedicated WhatsApp-style DevDesk AI voice-call page reachable from the composer plus menu
+- [x] Add language-aware device voice selection and Girl/Boy/Man/Woman/Adult/Senior speaking-style preferences
+- [x] Implement continuous voice turn-taking with microphone recognition and AI speech playback
+- [ ] Test the dedicated mobile voice-call flow, available voices, language playback, and permission errors
