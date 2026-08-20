@@ -106,7 +106,7 @@
 - [x] Create a public developer-focused landing page for first-time visitors
 - [x] Generate and integrate a custom DevDesk AI logo across the public and authenticated experiences
 - [x] Hide empty project status, no-project, and code-preview dashboard panels until a real workflow makes them relevant
-- [ ] Validate multi-turn chat, logout cleanup, landing-to-auth flow, and conditional dashboard panels in production
+- [x] Validate multi-turn chat, logout cleanup, landing-to-auth flow, and conditional dashboard panels in production
 - [x] Prevent the public landing page from flickering or looping for an already authenticated session
 - [x] Remove deprecated v1 account-local conversation records during logout and initialization
 - [x] Purge all v1 conversation keys, including prior account-scoped keys, on public-page initialization
