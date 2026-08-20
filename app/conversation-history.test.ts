@@ -19,3 +19,10 @@ test('conversation history uses a generous bounded limit without discarding a ne
   assert.equal(saved.length, 30);
   assert.equal(saved[0].id, 'new');
 });
+
+test('conversation history retains a custom title when new turns update the same chat', () => {
+  const named = { id: 'architecture', messages: ['Explain a service boundary'], updatedAt: 100, title: 'Backend architecture notes' };
+  const saved = upsertConversation([named], { id: 'architecture', messages: ['Explain a service boundary', 'Use explicit interfaces.'], updatedAt: 200, title: named.title });
+  assert.equal(saved[0].title, 'Backend architecture notes');
+  assert.deepEqual(saved[0].messages, ['Explain a service boundary', 'Use explicit interfaces.']);
+});

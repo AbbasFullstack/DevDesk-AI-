@@ -10,7 +10,7 @@
     "start": "next start",
     "check": "tsc --noEmit",
     "lint": "eslint",
-    "test": "tsx --test server/**/*.test.ts app/**/*.test.ts"
+    "test": "tsx --test server/**/*.test.ts app/*.test.ts app/**/*.test.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",

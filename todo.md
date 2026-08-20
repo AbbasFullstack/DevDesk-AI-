@@ -141,6 +141,10 @@
 - [ ] Validate a real production image in an authenticated browser session
 - [x] Repair mobile browser AI speech playback in the dedicated Voice Call flow
 - [ ] Validate mobile AI voice playback, languages, selected device voice, and permission feedback on Galaxy A21s
+- [x] Add a confirmed GitHub disconnect control that revokes the DevDesk-side connection and clears connected-repository state
+- [x] Add a visible Close or Back control to Account Settings so the composer returns without relying on the account menu
+- [x] Add per-conversation renaming in Chat history and preserve the custom title for the signed-in account
+- [x] Ensure root-level app regression tests are included in the deterministic test command
 - [x] Add an accessible image-generation progress bar and live status messages in the composer media panel
 - [x] Complete a five-pass production QA audit across the public site, workspace, media tools, Voice Call, and mobile responsive behavior
 - [x] Verify authenticated Image Generation end-to-end, including progress statuses, free-provider fallback, success display, and retry errors
