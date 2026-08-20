@@ -121,3 +121,4 @@
 - [x] Make Workspace, Projects, Analyses, and Connectors navigation controls open real useful views
 - [x] Render fenced AI code responses as syntax-colored copyable blocks with long-code overflow protection
 - [x] Perform screenshot-led mobile QA for logo, navigation panels, and long code response rendering
+- [x] Move the repository-context removal action out of the composer popover into project management
