@@ -11,19 +11,19 @@ type AuthControlsProps = { onRepositorySelected?: (repo: GitHubRepo) => void; on
 export function AuthControls({ onRepositorySelected, onOpenHistory, onOpenProjects, onNewChat, onAuthUserChange, onLogout }: AuthControlsProps) {
   const configured = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY);
   const [email, setEmail] = useState(''); const [password, setPassword] = useState(''); const [sessionEmail, setSessionEmail] = useState<string>(); const [sessionUserId, setSessionUserId] = useState<string>();
-  const [repos, setRepos] = useState<GitHubRepo[]>([]); const [githubLogin, setGithubLogin] = useState(''); const [githubState, setGithubState] = useState<GitHubState>('disconnected');
+  const [repos, setRepos] = useState<GitHubRepo[]>([]); const [githubLogin, setGithubLogin] = useState(''); const [githubState, setGithubState] = useState<GitHubState>('disconnected'); const [authResolved, setAuthResolved] = useState(!configured);
   const [reposOpen, setReposOpen] = useState(false); const [menuOpen, setMenuOpen] = useState(false); const [settingsOpen, setSettingsOpen] = useState(false);
   const [newPassword, setNewPassword] = useState(''); const [confirmPassword, setConfirmPassword] = useState(''); const [error, setError] = useState(''); const [notice, setNotice] = useState(''); const [open, setOpen] = useState(false); const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!configured) return;
     const supabase = createSupabaseBrowserClient();
-    void supabase.auth.getUser().then(({ data }) => { setSessionEmail(data.user?.email ?? undefined); setSessionUserId(data.user?.id); });
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => { setSessionEmail(nextSession?.user?.email ?? undefined); setSessionUserId(nextSession?.user?.id); });
+    void supabase.auth.getUser().then(({ data }) => { setSessionEmail(data.user?.email ?? undefined); setSessionUserId(data.user?.id); setAuthResolved(true); });
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => { setSessionEmail(nextSession?.user?.email ?? undefined); setSessionUserId(nextSession?.user?.id); setAuthResolved(true); });
     return () => listener.subscription.unsubscribe();
   }, [configured]);
 
-  useEffect(() => { onAuthUserChange?.(sessionUserId); }, [onAuthUserChange, sessionUserId]);
+  useEffect(() => { if (authResolved) onAuthUserChange?.(sessionUserId); }, [authResolved, onAuthUserChange, sessionUserId]);
 
   async function requestRepos(openPanel: boolean) {
     const response = await fetch('/api/github/repos'); const payload = await response.json();
