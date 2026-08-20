@@ -141,3 +141,4 @@
 - [ ] Validate a real production image in an authenticated browser session
 - [x] Repair mobile browser AI speech playback in the dedicated Voice Call flow
 - [ ] Validate mobile AI voice playback, languages, selected device voice, and permission feedback on Galaxy A21s
+- [x] Add an accessible image-generation progress bar and live status messages in the composer media panel
