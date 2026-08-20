@@ -78,3 +78,12 @@
 - [x] Add safe ZIP project import alongside existing connected GitHub repository import
 - [x] Add review-gated, owner-authorized GitHub file commit actions for selected changes only
 - [ ] Validate project creation, imports, analysis context, and protected GitHub write-back
+
+- [ ] Run QA pass one: fresh-account, authentication, public routes, and mobile navigation
+- [ ] Run QA pass two: GitHub connection, Projects, imports, analysis, and commit protections
+- [ ] Fix all reproducible defects found during the audit and retest affected flows
+- [ ] Run QA pass three: regression, security guard, and production mobile verification
+- [ ] Deliver the final QA checklist with verified items, fixes, blockers, and user-only tests
+
+- [ ] Fix cross-account exposure of browser-local chat history discovered during production QA
+- [ ] Retest account switching to confirm each user sees only their own local conversation history
