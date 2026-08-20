@@ -1,6 +1,6 @@
 'use client';
 
-import { Check, Copy } from 'lucide-react';
+import { Check, Copy, Eye, X } from 'lucide-react';
 import { useState } from 'react';
 
 type Segment = { type: 'text'; value: string } | { type: 'code'; language: string; value: string };
@@ -42,8 +42,17 @@ function HighlightedCode({ code, language }: { code: string; language: string })
   return <code className={`language-${language}`}>{output}</code>;
 }
 
+export function createPreviewDocument(code: string, language: string) {
+  if (['html', 'htm'].includes(language)) return code;
+  if (['css'].includes(language)) return `<!doctype html><html><head><style>body{margin:0;padding:24px;background:#0a1116;color:#effbfc;font-family:system-ui,sans-serif}.preview-card{padding:24px;border:1px solid #4abac6;border-radius:16px;background:#13222b} ${code}</style></head><body><main class="preview-card"><h1>CSS live preview</h1><p>This isolated canvas applies the generated CSS safely.</p><button>Preview button</button></main></body></html>`;
+  if (['js', 'javascript', 'ts', 'typescript'].includes(language)) return `<!doctype html><html><head><style>body{margin:0;padding:24px;background:#0a1116;color:#effbfc;font-family:system-ui,sans-serif}#app{padding:20px;border:1px solid #4abac6;border-radius:16px}</style></head><body><div id="app">JavaScript preview running…</div><script>${code}</script></body></html>`;
+  return '';
+}
+
 function CodeBlock({ code, language }: { code: string; language: string }) {
   const [copied, setCopied] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const previewDocument = createPreviewDocument(code, language);
   async function copyCode() {
     try {
       await navigator.clipboard.writeText(code);
@@ -53,7 +62,7 @@ function CodeBlock({ code, language }: { code: string; language: string }) {
       setCopied(false);
     }
   }
-  return <section className="ai-code-block"><header><span>{language === 'code' ? 'CODE' : language.toUpperCase()}</span><button onClick={() => void copyCode()} aria-label="Copy code">{copied ? <><Check size={13} /> Copied</> : <><Copy size={13} /> Copy</>}</button></header><pre><HighlightedCode code={code} language={language} /></pre></section>;
+  return <section className="ai-code-block"><header><span>{language === 'code' ? 'CODE' : language.toUpperCase()}</span><div className="code-block-actions">{previewDocument && <button onClick={() => setPreviewOpen(true)} aria-label="Preview code"><Eye size={13} /> Preview</button>}<button onClick={() => void copyCode()} aria-label="Copy code">{copied ? <><Check size={13} /> Copied</> : <><Copy size={13} /> Copy</>}</button></div></header><pre><HighlightedCode code={code} language={language} /></pre>{previewOpen && <div className="code-preview-backdrop" role="dialog" aria-modal="true" aria-label="Code preview"><section className="code-preview-modal"><header><div><span>ISOLATED LIVE PREVIEW</span><small>{language.toUpperCase()} runs in a sandboxed frame.</small></div><button onClick={() => setPreviewOpen(false)} aria-label="Close preview"><X size={16} /></button></header><iframe title={`${language} live preview`} sandbox="allow-scripts" srcDoc={previewDocument} /></section></div>}</section>;
 }
 
 export function AiMessageContent({ content }: { content: string }) {

@@ -122,3 +122,8 @@
 - [x] Render fenced AI code responses as syntax-colored copyable blocks with long-code overflow protection
 - [x] Perform screenshot-led mobile QA for logo, navigation panels, and long code response rendering
 - [x] Move the repository-context removal action out of the composer popover into project management
+- [x] Add an isolated live preview action beside Copy on supported AI HTML/CSS/JS code blocks
+- [x] Add a send-adjacent plus menu for voice call and image generation
+- [x] Add an authenticated server-side image-generation route with safe prompt validation
+- [x] Implement permission-aware browser voice call controls with clear device support feedback
+- [ ] Test code preview isolation, image generation, voice call, and mobile plus-menu behavior in production
