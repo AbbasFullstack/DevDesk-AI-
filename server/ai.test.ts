@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { askDevDesk, buildModelAttemptSequence, buildModelCandidates, DEV_DESK_IDENTITY, hasUnresolvedToolCall } from './ai';
+import { askDevDesk, buildModelAttemptSequence, buildModelCandidates, DEV_DESK_IDENTITY, EMERGENCY_CHAT_ENDPOINT, hasUnresolvedToolCall } from './ai';
 import { CURATED_FREE_OPENROUTER_FALLBACK_MODELS, env, GLM_PRIMARY_MODEL } from './env';
 
 async function withMockedOpenRouter(responses: Array<Response | Error>, run: (models: string[]) => Promise<void>) {
@@ -109,6 +109,40 @@ test('chat routing keeps trying verified fallbacks after a model-specific 403 re
     assert.equal(answer.text, 'Recovered through fallback.');
     assert.deepEqual(models, ['z-ai/glm-5.2:free', 'z-ai/glm-5.2:free', 'first-fallback:free']);
   });
+});
+
+test('chat returns the bounded no-key emergency response only after the GLM-first OpenRouter chain is exhausted', async () => {
+  const originalFetch = globalThis.fetch;
+  const originalEnv = { key: env.openRouterApiKey, model: env.openRouterModel, fallbacks: env.openRouterFallbackModels, timeout: env.openRouterTimeoutMs };
+  const requestedUrls: string[] = [];
+  const emergencyHeaders: Headers[] = [];
+  env.openRouterApiKey = 'test-key';
+  env.openRouterModel = 'z-ai/glm-5.2:free';
+  env.openRouterFallbackModels = ['first-fallback:free', 'second-fallback:free', 'third-fallback:free'];
+  env.openRouterTimeoutMs = 100;
+  globalThis.fetch = (async (input, init) => {
+    const url = String(input);
+    requestedUrls.push(url);
+    if (url === EMERGENCY_CHAT_ENDPOINT) {
+      emergencyHeaders.push(new Headers(init?.headers));
+      return new Response(JSON.stringify({ model: 'gpt-oss-20b', choices: [{ message: { content: 'Emergency chat recovery.' } }] }), { status: 200 });
+    }
+    return new Response('provider unavailable', { status: 503 });
+  }) as typeof fetch;
+  try {
+    const answer = await askDevDesk([{ role: 'user', content: 'Recover from a full provider outage.' }]);
+    assert.equal(answer.text, 'Emergency chat recovery.');
+    assert.equal(answer.model, 'emergency/gpt-oss-20b');
+    assert.equal(requestedUrls.filter((url) => url.includes('openrouter.ai')).length, 5);
+    assert.equal(requestedUrls.at(-1), EMERGENCY_CHAT_ENDPOINT);
+    assert.equal(emergencyHeaders[0]?.has('authorization'), false);
+  } finally {
+    globalThis.fetch = originalFetch;
+    env.openRouterApiKey = originalEnv.key;
+    env.openRouterModel = originalEnv.model;
+    env.openRouterFallbackModels = originalEnv.fallbacks;
+    env.openRouterTimeoutMs = originalEnv.timeout;
+  }
 });
 
 test('chat routing returns a safe user-facing message only after every candidate fails', async () => {

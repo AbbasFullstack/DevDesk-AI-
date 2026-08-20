@@ -3,6 +3,8 @@ import { z } from 'zod';
 import { askDevDesk } from '@/server/ai';
 import { env } from '@/server/env';
 
+export const maxDuration = 60;
+
 const inputSchema = z.object({
   messages: z.array(z.object({
     role: z.enum(['user', 'assistant']),

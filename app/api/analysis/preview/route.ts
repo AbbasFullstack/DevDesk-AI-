@@ -26,7 +26,10 @@ export async function POST(request: Request) {
   if (runStart.error || !runStart.data) return NextResponse.json({ error: 'Could not start a source analysis run.' }, { status: 500 });
   const context = files.map((file) => `FILE: ${file.path}\n${file.excerpt ?? ''}`).join('\n\n').slice(0, env.maxInputCharacters);
   try {
-    const answer = await askDevDesk(buildSourceAnalysisMessages({ projectName: project.name, branch: project.branch, question: input.data.question, context }));
+    const answer = await askDevDesk(
+      buildSourceAnalysisMessages({ projectName: project.name, branch: project.branch, question: input.data.question, context }),
+      { allowEmergencyFallback: false },
+    );
     await admin.from('analysis_runs').update({ status: 'complete', stage: 'complete', model: answer.model, completed_at: new Date().toISOString() }).eq('id', runStart.data.id);
     return NextResponse.json({ status: 'complete', analysisId: runStart.data.id, project: { id: project.id, name: project.name, branch: project.branch }, source: { fileCount: files.length, paths: files.map((file) => file.path) }, text: answer.text, model: answer.model, fallbackUsed: answer.attempts.length > 0 });
   } catch (issue) {
