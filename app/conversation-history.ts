@@ -1,4 +1,4 @@
-export type ConversationRecord<Message> = { id: string; messages: Message[]; updatedAt: number; repository?: string; title?: string };
+export type ConversationRecord<Message> = { id: string; messages: Message[]; updatedAt: number; createdAt?: number; repository?: string; title?: string };
 
 export function upsertConversation<Message>(conversations: ConversationRecord<Message>[], entry: ConversationRecord<Message>, maximum = 30) {
   return [entry, ...conversations.filter((conversation) => conversation.id !== entry.id)]

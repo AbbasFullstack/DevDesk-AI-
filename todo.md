@@ -151,3 +151,8 @@
 - [ ] Verify Voice Call on Galaxy A21s, including Test voice, AI reply speech, microphone permission, languages, selected device voice, and recovery feedback
 - [x] Add a final browser-deliverable free image fallback after the two Vercel-side provider attempts are exhausted
 - [x] Normalize Pollinations image seeds to the provider-safe integer range so production image requests do not fail before generation starts
+- [x] Live-test Voice Call AI speech playback and microphone permission behavior in the deployed production browser
+- [x] Record whether the result is browser-environment limited or confirmed on Galaxy A21s
+- [ ] Revalidate the production GitHub Disconnect/Logout control after connection and the top-right Account Settings Back/Close control
+- [x] Add per-chat rename and expandable detailed conversation metadata in Chat History, including type/project, message count, created time, updated time, and last activity
+- [x] Verify DevDesk-only Chat History changes and confirm Abbas AI was not modified by this request
