@@ -135,5 +135,5 @@
 - [ ] Test the dedicated mobile voice-call flow, available voices, language playback, and permission errors
 - [x] Persist each New chat as an independent account-scoped history entry and retain its complete messages
 - [x] Audit and harden provider-busy retries so a normal DevDesk AI chat recovers through the fallback chain
-- [ ] Validate multiple saved chats and live busy-error recovery in production
+- [ ] Validate multiple saved chats in an authenticated production browser session; live busy-error recovery is verified
 - [x] Add a server-side emergency text fallback for a total OpenRouter free-tier outage, without sending imported project source to that fallback
