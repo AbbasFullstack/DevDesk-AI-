@@ -52,7 +52,9 @@ export default function VoiceCallPage() {
     utterance.onstart = () => { setSpeaking(true); setNotice(`Voice test is playing${chosen ? ` with ${chosen.name}` : ''}…`); };
     utterance.onend = () => { setSpeaking(false); setNotice('Voice playback is ready. Start the call and speak naturally.'); };
     utterance.onerror = () => { setSpeaking(false); setNotice('Voice playback was blocked. Turn up media volume, then tap Test voice again.'); };
-    engine.cancel(); engine.resume(); window.setTimeout(() => engine.speak(utterance), 40);
+    // Keep this speak call inside the tap handler. Android Chrome treats a
+    // timer-delayed call as a new, non-user-initiated playback request.
+    engine.cancel(); engine.resume(); engine.speak(utterance);
   }, [callLanguage, selectedVoiceName, style]);
 
   const beginListening = useCallback(() => {
@@ -115,7 +117,7 @@ export default function VoiceCallPage() {
 
   useEffect(() => { if (callActive && !listening && !speaking && !thinking && !muted) beginListening(); }, [beginListening, callActive, listening, muted, speaking, thinking]);
 
-  function startCall() { if (!('speechSynthesis' in window)) { setNotice('Speech playback is not supported by this browser. Open this page in Chrome or Samsung Internet.'); return; } const engine = window.speechSynthesis; engine.cancel(); engine.resume(); const unlock = new SpeechSynthesisUtterance(' '); unlock.volume = 0; engine.speak(unlock); activeRef.current = true; setCallActive(true); setNotice('Connecting secure DevDesk AI voice call…'); }
+  function startCall() { if (!('speechSynthesis' in window)) { setNotice('Speech playback is not supported by this browser. Open this page in Chrome or Samsung Internet.'); return; } const engine = window.speechSynthesis; const welcome = new SpeechSynthesisUtterance(voicePreviewText(callLanguage())); welcome.lang = callLanguage(); const chosen = selectDeviceVoice(voicesRef.current, welcome.lang, style, selectedVoiceName); if (chosen) welcome.voice = chosen; welcome.rate = style === 'senior' ? 0.86 : style === 'girl' || style === 'boy' ? 1.08 : 0.96; welcome.onerror = () => setNotice('Voice playback is blocked. Tap Test voice, turn up media volume, then start again.'); engine.cancel(); engine.resume(); engine.speak(welcome); activeRef.current = true; setCallActive(true); setNotice('DevDesk call connected — you should hear a short welcome now.'); }
   function endCall() { activeRef.current = false; busyRef.current = false; recognitionRef.current?.stop(); recognitionRef.current = null; window.speechSynthesis?.cancel(); setListening(false); setSpeaking(false); setThinking(false); setCallActive(false); setNotice('Call ended. Start a new call whenever you are ready.'); }
   function toggleMute() { setMuted((value) => !value); recognitionRef.current?.stop(); if (!muted) setNotice('Microphone muted. DevDesk can still speak.'); }
 
