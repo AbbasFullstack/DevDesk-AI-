@@ -101,3 +101,9 @@
 - [x] Add deterministic routing, timeout, malformed-response, and all-model-failure tests for AI chat
 - [x] Run a deep production chat audit and report verified fallback behavior
 - [x] Prevent source analysis from confusing the imported repository with DevDesk AI itself
+- [x] Preserve every message in an authenticated chat instead of replacing the prior response
+- [x] Clear account-scoped browser chat and imported-project state on logout
+- [x] Create a public developer-focused landing page for first-time visitors
+- [x] Generate and integrate a custom DevDesk AI logo across the public and authenticated experiences
+- [x] Hide empty project status, no-project, and code-preview dashboard panels until a real workflow makes them relevant
+- [ ] Validate multi-turn chat, logout cleanup, landing-to-auth flow, and conditional dashboard panels in production

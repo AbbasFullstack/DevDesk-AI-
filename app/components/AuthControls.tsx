@@ -6,9 +6,9 @@ import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 
 export type GitHubRepo = { id: number; name: string; fullName: string; private: boolean; defaultBranch: string; url: string; description: string | null };
 type GitHubState = 'checking' | 'connected' | 'disconnected';
-type AuthControlsProps = { onRepositorySelected?: (repo: GitHubRepo) => void; onOpenHistory?: () => void; onOpenProjects?: () => void; onNewChat?: () => void; onAuthUserChange?: (userId?: string) => void };
+type AuthControlsProps = { onRepositorySelected?: (repo: GitHubRepo) => void; onOpenHistory?: () => void; onOpenProjects?: () => void; onNewChat?: () => void; onAuthUserChange?: (userId?: string) => void; onLogout?: () => void };
 
-export function AuthControls({ onRepositorySelected, onOpenHistory, onOpenProjects, onNewChat, onAuthUserChange }: AuthControlsProps) {
+export function AuthControls({ onRepositorySelected, onOpenHistory, onOpenProjects, onNewChat, onAuthUserChange, onLogout }: AuthControlsProps) {
   const configured = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY);
   const [email, setEmail] = useState(''); const [password, setPassword] = useState(''); const [sessionEmail, setSessionEmail] = useState<string>(); const [sessionUserId, setSessionUserId] = useState<string>();
   const [repos, setRepos] = useState<GitHubRepo[]>([]); const [githubLogin, setGithubLogin] = useState(''); const [githubState, setGithubState] = useState<GitHubState>('disconnected');
@@ -46,7 +46,7 @@ export function AuthControls({ onRepositorySelected, onOpenHistory, onOpenProjec
     setLoading(false);
   }
 
-  async function logout(openSignIn = false) { const supabase = createSupabaseBrowserClient(); await supabase.auth.signOut(); setSessionEmail(undefined); setSessionUserId(undefined); setRepos([]); setGithubLogin(''); setReposOpen(false); setMenuOpen(false); setSettingsOpen(false); setOpen(openSignIn); }
+  async function logout(openSignIn = false) { onLogout?.(); const supabase = createSupabaseBrowserClient(); await supabase.auth.signOut(); setSessionEmail(undefined); setSessionUserId(undefined); setRepos([]); setGithubLogin(''); setReposOpen(false); setMenuOpen(false); setSettingsOpen(false); setOpen(openSignIn); }
   async function changePassword() { if (newPassword.length < 8) return setError('Password must contain at least 8 characters.'); if (newPassword !== confirmPassword) return setError('Passwords do not match.'); setLoading(true); setError(''); setNotice(''); const { error: updateError } = await createSupabaseBrowserClient().auth.updateUser({ password: newPassword }); if (updateError) setError(updateError.message); else { setNotice('Password changed successfully.'); setNewPassword(''); setConfirmPassword(''); } setLoading(false); }
   function connectGithub() { window.location.href = '/api/github/start'; }
   async function loadRepos() { setLoading(true); setError(''); try { await requestRepos(true); } catch (issue) { setError(issue instanceof Error ? issue.message : 'Could not load repositories.'); setGithubState('disconnected'); } finally { setLoading(false); } }
