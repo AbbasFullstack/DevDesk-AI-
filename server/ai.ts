@@ -1,4 +1,4 @@
-import { env } from './env';
+import { env, GLM_PRIMARY_MODEL } from './env';
 
 export type ChatMessage = { role: 'system' | 'user' | 'assistant'; content: string };
 export type DevDeskAnswer = { text: string; model: string; attempts: string[] };
@@ -8,6 +8,15 @@ const TEMPORARY_UNAVAILABLE_MESSAGE = 'DevDesk AI is temporarily busy. Please tr
 
 export function buildModelCandidates(primaryModel: string, fallbackModels: string[]) {
   return [...new Set([primaryModel, ...fallbackModels].map((model) => model.trim()).filter(Boolean))];
+}
+
+export function buildModelAttemptSequence(primaryModel: string, fallbackModels: string[]) {
+  const candidates = boundedCandidates(primaryModel, fallbackModels);
+  const [first, ...fallbacks] = candidates;
+  // GLM 5.2 free can occasionally reject the first provider attempt and then
+  // respond immediately on a retry. Give the requested primary model one more
+  // bounded chance before consuming the fallback chain.
+  return first === GLM_PRIMARY_MODEL ? [first, first, ...fallbacks] : candidates;
 }
 
 export function hasUnresolvedToolCall(text: string) {
@@ -22,7 +31,7 @@ function boundedCandidates(primaryModel: string, fallbackModels: string[]) {
 
 export async function askDevDesk(messages: ChatMessage[]): Promise<DevDeskAnswer> {
   if (!env.openRouterApiKey) throw new Error('DevDesk AI is not configured on the server yet.');
-  const candidates = boundedCandidates(env.openRouterModel, env.openRouterFallbackModels);
+  const candidates = buildModelAttemptSequence(env.openRouterModel, env.openRouterFallbackModels);
   const attempts: string[] = [];
   const enrichedMessages: ChatMessage[] = [{ role: 'system', content: DEV_DESK_IDENTITY }, ...messages];
 
