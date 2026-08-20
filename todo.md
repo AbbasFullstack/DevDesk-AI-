@@ -116,4 +116,4 @@
 - [x] Add authenticated owner-scoped project removal with explicit confirmation and workspace cleanup
 - [x] Add GitHub repository selector, import action, and disconnect/import-clear action to the chat composer
 - [x] Replace the Voice placeholder with working browser voice dictation and clear permission/support feedback
-- [ ] Test project removal, composer repository controls, voice dictation, and mobile layout in production
+- [x] Test project removal, composer repository controls, voice dictation, and mobile layout in production
