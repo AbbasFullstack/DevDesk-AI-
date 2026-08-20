@@ -18,10 +18,10 @@ export async function POST(request: Request) {
       { role: 'system', content: 'You are DevDesk AI, a precise senior engineer. Explain project issues with evidence, ask clarifying questions when context is missing, and never claim to have executed code you did not execute.' },
       ...input.data.messages,
     ]);
-    return NextResponse.json({ text: answer.text, model: answer.model, fallbackUsed: answer.attempts.length > 0 });
+    return NextResponse.json({ text: answer.text, model: answer.model, fallbackUsed: answer.attempts.length > 0, attemptCount: answer.attempts.length + 1 });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'The AI request failed.';
+    const message = error instanceof Error ? error.message : 'DevDesk AI is temporarily busy. Please try again in a moment.';
     console.error('[devdesk-chat] provider request failed', { message, model: env.openRouterModel, keyConfigured: Boolean(env.openRouterApiKey) });
-    return NextResponse.json({ error: message }, { status: 502 });
+    return NextResponse.json({ error: message, retryable: true }, { status: 503 });
   }
 }

@@ -24,9 +24,9 @@ app.post('/api/chat', async (req, res) => {
       { role: 'system', content: 'You are DevDesk AI, a precise senior engineer. Explain findings with evidence, ask clarifying questions when project context is missing, and never claim to have executed code you did not execute.' },
       ...input.data.messages,
     ]);
-    return res.json({ text: answer.text, model: answer.model, fallbackUsed: answer.attempts.length > 0 });
+    return res.json({ text: answer.text, model: answer.model, fallbackUsed: answer.attempts.length > 0, attemptCount: answer.attempts.length + 1 });
   } catch (error) {
-    return res.status(502).json({ error: error instanceof Error ? error.message : 'AI request failed.' });
+    return res.status(503).json({ error: error instanceof Error ? error.message : 'DevDesk AI is temporarily busy. Please try again in a moment.', retryable: true });
   }
 });
 

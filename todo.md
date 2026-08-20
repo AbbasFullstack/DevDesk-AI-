@@ -96,3 +96,7 @@
 - [x] Verify the resulting AbbasAI GitHub commit and report the write-back result
 
 - [x] Allow review-gated GitHub commits to create a safe new source file when no existing file SHA is supplied
+- [x] Research currently available OpenRouter free chat models and select a verified 15-plus-model fallback order
+- [x] Keep GLM 5.2 as the primary DevDesk AI chat model and expand resilient server-side fallback routing
+- [ ] Add deterministic routing, timeout, malformed-response, and all-model-failure tests for AI chat
+- [ ] Run a deep production chat audit and report verified fallback behavior
