@@ -38,6 +38,11 @@ export const env = {
   openRouterModel: GLM_PRIMARY_MODEL,
   openRouterFallbackModels: [...CURATED_FREE_OPENROUTER_FALLBACK_MODELS] as string[],
   openRouterTimeoutMs: Number(process.env.OPENROUTER_TIMEOUT_MS ?? 8_000),
+  // Optional independent general-chat fallback. This key must remain server-side
+  // and is deliberately not used for imported repository source analysis.
+  groqApiKey: process.env.GROQ_API_KEY ?? '',
+  groqModel: process.env.GROQ_MODEL ?? 'llama-3.3-70b-versatile',
+  groqTimeoutMs: Number(process.env.GROQ_TIMEOUT_MS ?? 8_000),
   maxInputCharacters: Number(process.env.MAX_INPUT_CHARACTERS ?? 12000),
   maxOutputTokens: Number(process.env.MAX_OUTPUT_TOKENS ?? 1400),
 };

@@ -1,16 +1,17 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { askDevDesk, buildModelAttemptSequence, buildModelCandidates, DEV_DESK_IDENTITY, EMERGENCY_CHAT_ENDPOINT, hasUnresolvedToolCall, ProviderCapacityError, resetChatCapacityCooldownForTests } from './ai';
+import { askDevDesk, buildModelAttemptSequence, buildModelCandidates, DEV_DESK_IDENTITY, EMERGENCY_CHAT_ENDPOINT, GROQ_CHAT_ENDPOINT, hasUnresolvedToolCall, ProviderCapacityError, resetChatCapacityCooldownForTests } from './ai';
 import { CURATED_FREE_OPENROUTER_FALLBACK_MODELS, env, GLM_PRIMARY_MODEL } from './env';
 
 async function withMockedOpenRouter(responses: Array<Response | Error>, run: (models: string[]) => Promise<void>) {
   const originalFetch = globalThis.fetch;
-  const originalEnv = { key: env.openRouterApiKey, model: env.openRouterModel, fallbacks: env.openRouterFallbackModels, timeout: env.openRouterTimeoutMs };
+  const originalEnv = { key: env.openRouterApiKey, model: env.openRouterModel, fallbacks: env.openRouterFallbackModels, timeout: env.openRouterTimeoutMs, groqKey: env.groqApiKey, groqModel: env.groqModel, groqTimeout: env.groqTimeoutMs };
   const models: string[] = [];
   env.openRouterApiKey = 'test-key';
   env.openRouterModel = 'z-ai/glm-5.2:free';
   env.openRouterFallbackModels = ['first-fallback:free', 'second-fallback:free', 'third-fallback:free'];
   env.openRouterTimeoutMs = 100;
+  env.groqApiKey = '';
   resetChatCapacityCooldownForTests();
   globalThis.fetch = (async (_input, init) => {
     const request = JSON.parse(String(init?.body)) as { model: string };
@@ -28,6 +29,9 @@ async function withMockedOpenRouter(responses: Array<Response | Error>, run: (mo
     env.openRouterModel = originalEnv.model;
     env.openRouterFallbackModels = originalEnv.fallbacks;
     env.openRouterTimeoutMs = originalEnv.timeout;
+    env.groqApiKey = originalEnv.groqKey;
+    env.groqModel = originalEnv.groqModel;
+    env.groqTimeoutMs = originalEnv.groqTimeout;
     resetChatCapacityCooldownForTests();
   }
 }
@@ -138,6 +142,43 @@ test('a platform 429 activates a cooldown instead of multiplying one free-tier r
   });
 });
 
+test('ordinary chat uses configured independent Groq fallback after the GLM-first OpenRouter chain is exhausted', async () => {
+  const originalFetch = globalThis.fetch;
+  const originalEnv = { key: env.openRouterApiKey, model: env.openRouterModel, fallbacks: env.openRouterFallbackModels, timeout: env.openRouterTimeoutMs, groqKey: env.groqApiKey, groqModel: env.groqModel, groqTimeout: env.groqTimeoutMs };
+  const requestedUrls: string[] = [];
+  env.openRouterApiKey = 'openrouter-test-key';
+  env.openRouterModel = 'z-ai/glm-5.2:free';
+  env.openRouterFallbackModels = ['first-fallback:free', 'second-fallback:free', 'third-fallback:free'];
+  env.openRouterTimeoutMs = 100;
+  env.groqApiKey = 'groq-test-key';
+  env.groqModel = 'groq-test-model';
+  env.groqTimeoutMs = 100;
+  globalThis.fetch = (async (input, init) => {
+    const url = String(input); requestedUrls.push(url);
+    if (url === GROQ_CHAT_ENDPOINT) {
+      assert.equal(new Headers(init?.headers).get('authorization'), 'Bearer groq-test-key');
+      return new Response(JSON.stringify({ model: 'groq-test-model', choices: [{ message: { content: 'Recovered through Groq.' } }] }), { status: 200 });
+    }
+    return new Response('provider unavailable', { status: 503 });
+  }) as typeof fetch;
+  try {
+    const answer = await askDevDesk([{ role: 'user', content: 'Recover through independent provider.' }]);
+    assert.equal(answer.text, 'Recovered through Groq.');
+    assert.equal(answer.model, 'groq/groq-test-model');
+    assert.equal(requestedUrls.filter((url) => url.includes('openrouter.ai')).length, 5);
+    assert.equal(requestedUrls.at(-1), GROQ_CHAT_ENDPOINT);
+  } finally {
+    globalThis.fetch = originalFetch;
+    env.openRouterApiKey = originalEnv.key;
+    env.openRouterModel = originalEnv.model;
+    env.openRouterFallbackModels = originalEnv.fallbacks;
+    env.openRouterTimeoutMs = originalEnv.timeout;
+    env.groqApiKey = originalEnv.groqKey;
+    env.groqModel = originalEnv.groqModel;
+    env.groqTimeoutMs = originalEnv.groqTimeout;
+  }
+});
+
 test('chat returns the bounded no-key emergency response only after the GLM-first OpenRouter chain is exhausted', async () => {
   const originalFetch = globalThis.fetch;
   const originalEnv = { key: env.openRouterApiKey, model: env.openRouterModel, fallbacks: env.openRouterFallbackModels, timeout: env.openRouterTimeoutMs };
@@ -198,7 +239,7 @@ test('source-backed callers can reject capacity continuity without exposing the 
     await assert.rejects(
       askDevDesk(
         [{ role: 'user', content: `Analyze this imported context: ${importedMarker}` }],
-        { allowEmergencyFallback: false, allowContinuityResponse: false },
+        { allowEmergencyFallback: false, allowIndependentFallback: false, allowContinuityResponse: false },
       ),
       (issue: unknown) => {
         assert.ok(issue instanceof ProviderCapacityError);

@@ -165,9 +165,12 @@
 - [x] Prevent source-backed analysis from returning generic continuity guidance or exposing imported prompt content when external providers are unavailable
 - [x] Require an authenticated DevDesk session before the server-side chat route consumes AI-provider capacity
 - [x] Expose safe new-file path staging in the review-gated GitHub commit interface without requiring an existing file selection
-- [ ] Run a controlled 20-prompt authenticated DevDesk chat reliability audit and record provider outcomes
-- [ ] Re-evaluate the GLM 5.2-first OpenRouter fallback order using currently available free chat models
-- [ ] Repair any reproducible server-side chat routing failures and re-test the live deployment
-- [ ] Avoid multiplying one user chat request into repeated free-tier calls after an upstream or platform 429 response
-- [ ] Add a short server-side capacity cooldown so concurrent user prompts do not repeatedly exhaust free-model limits
-- [ ] Persist a per-account browser chat cooldown after capacity guidance so ordinary composer retries do not re-hit constrained providers
+- [x] Run a controlled 20-prompt authenticated DevDesk chat reliability audit and record provider outcomes
+- [x] Re-evaluate the GLM 5.2-first OpenRouter fallback order using currently available free chat models
+- [x] Repair any reproducible server-side chat routing failures and re-test the live deployment
+- [x] Avoid multiplying one user chat request into repeated free-tier calls after an upstream or platform 429 response
+- [x] Add a short server-side capacity cooldown so concurrent user prompts do not repeatedly exhaust free-model limits
+- [x] Persist a per-account browser chat cooldown after capacity guidance so ordinary composer retries do not re-hit constrained providers
+- [x] Design GLM 5.2-first cross-provider failover with independent provider health, timeout, and capacity rules
+- [x] Add optional server-side Groq fallback using a user-owned credential; never expose it to the browser
+- [x] Validate multi-provider failover with deterministic provider-outage, rate-limit, timeout, and success-path tests

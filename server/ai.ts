@@ -2,7 +2,7 @@ import { env, GLM_PRIMARY_MODEL } from './env';
 
 export type ChatMessage = { role: 'system' | 'user' | 'assistant'; content: string };
 export type DevDeskAnswer = { text: string; model: string; attempts: string[] };
-export type AskDevDeskOptions = { allowEmergencyFallback?: boolean; allowContinuityResponse?: boolean };
+export type AskDevDeskOptions = { allowEmergencyFallback?: boolean; allowIndependentFallback?: boolean; allowContinuityResponse?: boolean };
 
 export class ProviderCapacityError extends Error {
   readonly attempts: string[];
@@ -17,6 +17,7 @@ export class ProviderCapacityError extends Error {
 export const DEV_DESK_IDENTITY = `You are DevDesk AI, a thoughtful senior software engineering assistant for code analysis and developer workflows. DevDesk AI was created, designed, and configured by Abbas Hussain. If asked who built, created, or made you, say clearly: "I am DevDesk AI, created by Abbas Hussain." Do not claim that Abbas Hussain trained the underlying foundation models or that you are an independent person. Be accurate about source evidence, ask clarifying questions when necessary, and never claim to have executed or inspected code that was not supplied.`;
 export const EMERGENCY_CHAT_ENDPOINT = 'https://oai.endpoints.kepler.ai.cloud.ovh.net/v1/chat/completions';
 export const EMERGENCY_CHAT_MODEL = 'gpt-oss-20b';
+export const GROQ_CHAT_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
 const TEMPORARY_UNAVAILABLE_MESSAGE = 'DevDesk AI is temporarily busy. Please try again in a moment.';
 const MAX_PRODUCTION_OPENROUTER_ATTEMPTS = 5;
 const MAX_CHAT_PROVIDER_TIMEOUT_MS = 5_000;
@@ -96,6 +97,30 @@ async function askEmergencyFallback(messages: ChatMessage[], attempts: string[])
   }
 }
 
+async function askGroqFallback(messages: ChatMessage[], attempts: string[]): Promise<DevDeskAnswer | undefined> {
+  if (!env.groqApiKey) return undefined;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), Math.min(env.groqTimeoutMs, MAX_CHAT_PROVIDER_TIMEOUT_MS));
+  try {
+    const response = await fetch(GROQ_CHAT_ENDPOINT, {
+      method: 'POST',
+      signal: controller.signal,
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${env.groqApiKey}` },
+      body: JSON.stringify({ model: env.groqModel, messages, max_tokens: env.maxOutputTokens, temperature: 0.35 }),
+    });
+    if (!response.ok) { attempts.push(`groq/${env.groqModel} (${response.status})`); return undefined; }
+    const payload = await response.json().catch(() => undefined) as { model?: string; choices?: Array<{ message?: { content?: string } }> } | undefined;
+    const text = payload && validText(payload);
+    if (!text) { attempts.push(`groq/${env.groqModel} (empty or unsafe response)`); return undefined; }
+    return { text, model: `groq/${payload.model ?? env.groqModel}`, attempts };
+  } catch (issue) {
+    attempts.push(`groq/${env.groqModel} (${issue instanceof Error && issue.name === 'AbortError' ? 'timeout' : 'network error'})`);
+    return undefined;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 function continuityGuidance(messages: ChatMessage[], attempts: string[]): DevDeskAnswer {
   const latestPrompt = messages.filter((message) => message.role === 'user').at(-1)?.content.trim() || 'your developer question';
   const codeRequest = /\b(code|typescript|javascript|react|next|function|component|api|bug|error)\b/i.test(latestPrompt);
@@ -110,13 +135,12 @@ export async function askDevDesk(messages: ChatMessage[], options: AskDevDeskOpt
   const attempts: string[] = env.openRouterApiKey ? [] : ['OpenRouter (not configured)'];
   const enrichedMessages: ChatMessage[] = [{ role: 'system', content: DEV_DESK_IDENTITY }, ...messages];
 
-  if (candidates.length && platformRateLimitActive()) {
+  const openRouterCoolingDown = candidates.length && platformRateLimitActive();
+  if (openRouterCoolingDown) {
     attempts.push('OpenRouter platform rate-limit cooldown');
-    if (options.allowContinuityResponse === false) throw new ProviderCapacityError(attempts);
-    return continuityGuidance(messages, attempts);
   }
 
-  for (let index = 0; index < candidates.length; index += 1) {
+  for (let index = 0; !openRouterCoolingDown && index < candidates.length; index += 1) {
     const model = candidates[index]!;
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), Math.min(env.openRouterTimeoutMs, MAX_CHAT_PROVIDER_TIMEOUT_MS));
@@ -166,10 +190,20 @@ export async function askDevDesk(messages: ChatMessage[], options: AskDevDeskOpt
       clearTimeout(timeout);
     }
   }
+  // Independent providers are restricted to ordinary general chat. Imported
+  // repository excerpts never leave the configured source-analysis boundary.
+  if (options.allowIndependentFallback !== false) {
+    const groqAnswer = await askGroqFallback(enrichedMessages, attempts);
+    if (groqAnswer) return groqAnswer;
+  }
+  if (openRouterCoolingDown && !env.groqApiKey) {
+    if (options.allowContinuityResponse === false) throw new ProviderCapacityError(attempts);
+    return continuityGuidance(messages, attempts);
+  }
   // This no-key provider is intentionally reserved for ordinary chat only. It
   // gives users a best-effort response during a total OpenRouter free-tier
   // outage while keeping imported repository source on the configured service.
-  if (options.allowEmergencyFallback !== false) {
+  if (options.allowEmergencyFallback !== false && (!openRouterCoolingDown || Boolean(env.groqApiKey))) {
     const emergencyAnswer = await askEmergencyFallback(enrichedMessages, attempts);
     if (emergencyAnswer) return emergencyAnswer;
   }

@@ -48,7 +48,7 @@ app.post('/api/analysis/preview', async (req, res) => {
     const answer = await askDevDesk([
       { role: 'system', content: 'You analyze software projects. Return a concise answer with sections: Understanding, Questions, Findings, and Recommended fix.' },
       { role: 'user', content: `Project: ${input.data.projectName}\nQuestion: ${input.data.question}\n\nProject context:\n${input.data.files.map((file) => `FILE ${file.path}\n${file.excerpt}`).join('\n\n').slice(0, env.maxInputCharacters)}` },
-    ], { allowEmergencyFallback: false, allowContinuityResponse: false });
+    ], { allowEmergencyFallback: false, allowIndependentFallback: false, allowContinuityResponse: false });
     return res.json({ status: 'complete', projectName: input.data.projectName, text: answer.text, model: answer.model, fallbackUsed: answer.attempts.length > 0 });
   } catch (error) {
     if (error instanceof ProviderCapacityError) return res.status(503).json({ error: error.message, retryable: true });
