@@ -164,3 +164,4 @@
 - [x] Prevent source-backed analysis from returning generic continuity guidance or exposing imported prompt content when external providers are unavailable
 - [x] Prevent source-backed analysis from returning generic continuity guidance or exposing imported prompt content when external providers are unavailable
 - [x] Require an authenticated DevDesk session before the server-side chat route consumes AI-provider capacity
+- [x] Expose safe new-file path staging in the review-gated GitHub commit interface without requiring an existing file selection
