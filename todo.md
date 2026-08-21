@@ -170,3 +170,4 @@
 - [ ] Repair any reproducible server-side chat routing failures and re-test the live deployment
 - [ ] Avoid multiplying one user chat request into repeated free-tier calls after an upstream or platform 429 response
 - [ ] Add a short server-side capacity cooldown so concurrent user prompts do not repeatedly exhaust free-model limits
+- [ ] Persist a per-account browser chat cooldown after capacity guidance so ordinary composer retries do not re-hit constrained providers

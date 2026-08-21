@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { askDevDesk } from '@/server/ai';
 import { env } from '@/server/env';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { CHAT_CAPACITY_COOLDOWN_SECONDS } from '@/app/chat-capacity';
 
 export const maxDuration = 60;
 
@@ -24,7 +25,8 @@ export async function POST(request: Request) {
       { role: 'system', content: 'You are DevDesk AI, a precise senior engineer. Explain project issues with evidence, ask clarifying questions when context is missing, and never claim to have executed code you did not execute.' },
       ...input.data.messages,
     ]);
-    return NextResponse.json({ text: answer.text, model: answer.model, fallbackUsed: answer.attempts.length > 0, attemptCount: answer.attempts.length + 1 });
+    const retryAfterSeconds = answer.model === 'continuity/provider-capacity' ? CHAT_CAPACITY_COOLDOWN_SECONDS : undefined;
+    return NextResponse.json({ text: answer.text, model: answer.model, fallbackUsed: answer.attempts.length > 0, attemptCount: answer.attempts.length + 1, retryAfterSeconds });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'DevDesk AI is temporarily busy. Please try again in a moment.';
     console.error('[devdesk-chat] provider request failed', { message, model: env.openRouterModel, keyConfigured: Boolean(env.openRouterApiKey) });
