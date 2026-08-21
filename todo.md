@@ -174,8 +174,12 @@
 - [x] Design GLM 5.2-first cross-provider failover with independent provider health, timeout, and capacity rules
 - [x] Add optional server-side Groq fallback using a user-owned credential; never expose it to the browser
 - [x] Validate multi-provider failover with deterministic provider-outage, rate-limit, timeout, and success-path tests
-- [ ] Configure the user-authorized Grok API key only as a server-side Vercel environment variable for DevDesk AI
+- [x] Configure the user-authorized Grok API key only as a server-side Vercel environment variable for DevDesk AI
 - [ ] Verify deployed Grok fallback response after an authorized Vercel redeploy
 - [x] Add optional xAI Grok fallback with a distinct server-side XAI_API_KEY configuration and preserve the separate Groq adapter
 - [x] Add optional Cerebras fallback with a distinct server-side CEREBRAS_API_KEY configuration after xAI Grok and before Groq
 - [ ] Configure user-authorized xAI and Cerebras secrets only in Vercel, then verify the deployed failover order
+- [ ] Complete an authenticated production chat verification after browser automation recovers from its temporary crash loop
+- [ ] Diagnose why configured xAI and Cerebras fallback requests still end in capacity guidance instead of a model-backed answer
+- [x] Correct the Galaxy A21s mobile breakpoint so the DevDesk workspace does not render at desktop scale
+- [ ] Re-test the real mobile chat flow after the provider and responsive-layout repairs deploy
