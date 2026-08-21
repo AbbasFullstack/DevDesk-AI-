@@ -163,3 +163,4 @@
 - [x] Fix the reproducible production AI chat outage: five consecutive normal requests returned retryable HTTP 503 busy errors
 - [x] Prevent source-backed analysis from returning generic continuity guidance or exposing imported prompt content when external providers are unavailable
 - [x] Prevent source-backed analysis from returning generic continuity guidance or exposing imported prompt content when external providers are unavailable
+- [x] Require an authenticated DevDesk session before the server-side chat route consumes AI-provider capacity

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { askDevDesk } from '@/server/ai';
 import { env } from '@/server/env';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
 
 export const maxDuration = 60;
 
@@ -15,6 +16,9 @@ const inputSchema = z.object({
 export async function POST(request: Request) {
   const input = inputSchema.safeParse(await request.json().catch(() => undefined));
   if (!input.success) return NextResponse.json({ error: 'Messages are invalid or exceed the allowed size.' }, { status: 400 });
+  const supabase = await createSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: 'Authentication required.' }, { status: 401 });
   try {
     const answer = await askDevDesk([
       { role: 'system', content: 'You are DevDesk AI, a precise senior engineer. Explain project issues with evidence, ask clarifying questions when context is missing, and never claim to have executed code you did not execute.' },
