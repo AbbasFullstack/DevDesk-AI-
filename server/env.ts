@@ -6,19 +6,23 @@ export const GLM_PRIMARY_MODEL = 'z-ai/glm-5.2:free';
 // list explicit rather than routing arbitrary catalog models in production.
 // The content-safety-only Nemotron entry is deliberately excluded from chat.
 export const CURATED_FREE_OPENROUTER_FALLBACK_MODELS = [
-  'nvidia/nemotron-3-ultra-550b-a55b:free',
-  'nvidia/nemotron-3-super-120b-a12b:free',
+  // OpenRouter's current free catalog still contains the long-context and
+  // specialist models below. Keep lower-latency general/code models first:
+  // production tries only five OpenRouter candidates before the bounded
+  // emergency path, while `openrouter/free` remains immediately after GLM.
+  'nvidia/nemotron-3.5-lightning:free',
   'poolside/laguna-s-2.1:free',
+  'cohere/north-mini-code:free',
   'openai/gpt-oss-20b:free',
   'dots-studio/dots-3-note-preview:free',
   'google/gemma-4-31b-it:free',
   'google/gemma-4-26b-a4b-it:free',
+  'nvidia/nemotron-3-ultra-550b-a55b:free',
+  'nvidia/nemotron-3-super-120b-a12b:free',
   'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free',
   'nvidia/nemotron-3-nano-30b-a3b:free',
   'nvidia/nemotron-nano-12b-v2-vl:free',
-  'nvidia/nemotron-3.5-lightning:free',
   'nvidia/nemotron-nano-9b-v2:free',
-  'cohere/north-mini-code:free',
   'poolside/laguna-xs-2.1:free',
   'liquid/lfm-2.5-2.6b:free',
   'openrouter/free',

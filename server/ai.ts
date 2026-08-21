@@ -18,7 +18,9 @@ export const DEV_DESK_IDENTITY = `You are DevDesk AI, a thoughtful senior softwa
 export const EMERGENCY_CHAT_ENDPOINT = 'https://oai.endpoints.kepler.ai.cloud.ovh.net/v1/chat/completions';
 export const EMERGENCY_CHAT_MODEL = 'gpt-oss-20b';
 const TEMPORARY_UNAVAILABLE_MESSAGE = 'DevDesk AI is temporarily busy. Please try again in a moment.';
-const MAX_PRODUCTION_OPENROUTER_ATTEMPTS = 6;
+const MAX_PRODUCTION_OPENROUTER_ATTEMPTS = 5;
+const MAX_CHAT_PROVIDER_TIMEOUT_MS = 5_000;
+const EMERGENCY_CHAT_TIMEOUT_MS = 8_000;
 
 export function buildModelCandidates(primaryModel: string, fallbackModels: string[]) {
   return [...new Set([primaryModel, ...fallbackModels].map((model) => model.trim()).filter(Boolean))];
@@ -57,7 +59,7 @@ function validText(payload: { choices?: Array<{ message?: { content?: string } }
 
 async function askEmergencyFallback(messages: ChatMessage[], attempts: string[]): Promise<DevDeskAnswer | undefined> {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 12_000);
+  const timeout = setTimeout(() => controller.abort(), EMERGENCY_CHAT_TIMEOUT_MS);
   try {
     const response = await fetch(EMERGENCY_CHAT_ENDPOINT, {
       method: 'POST',
@@ -92,9 +94,10 @@ export async function askDevDesk(messages: ChatMessage[], options: AskDevDeskOpt
   const attempts: string[] = env.openRouterApiKey ? [] : ['OpenRouter (not configured)'];
   const enrichedMessages: ChatMessage[] = [{ role: 'system', content: DEV_DESK_IDENTITY }, ...messages];
 
-  for (const model of candidates) {
+  for (let index = 0; index < candidates.length; index += 1) {
+    const model = candidates[index]!;
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), env.openRouterTimeoutMs);
+    const timeout = setTimeout(() => controller.abort(), Math.min(env.openRouterTimeoutMs, MAX_CHAT_PROVIDER_TIMEOUT_MS));
     try {
       const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
@@ -104,6 +107,10 @@ export async function askDevDesk(messages: ChatMessage[], options: AskDevDeskOpt
       });
       if (!response.ok) {
         attempts.push(`${model} (${response.status})`);
+        // Keep GLM 5.2 first and retry temporary provider failures, but do not
+        // duplicate an explicit 429 rate-limit response. Move immediately to
+        // the independent free-router fallback instead of extending the wait.
+        if (response.status === 429 && model === GLM_PRIMARY_MODEL && candidates[index + 1] === GLM_PRIMARY_MODEL) index += 1;
         // A free-model/provider denial can be model-specific. Continue to the
         // next verified model instead of exposing a provider error to users.
         continue;

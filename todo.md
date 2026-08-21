@@ -158,10 +158,13 @@
 - [x] Verify DevDesk-only Chat History changes and confirm Abbas AI was not modified by this request
 - [x] Repeat end-to-end production QA for Image Generation and Voice Call, covering success, fallback, error, speech, and microphone states
 - [ ] Execute a deep 10-pass production QA audit using a 100-plus-item test matrix
-- [ ] Stress-test authenticated AI chat with repeated development, code-generation, error-recovery, and fallback requests
-- [ ] Inspect the connected GitHub import, analysis, and review-gated commit flow; request confirmation before any repository write
+- [x] Stress-test authenticated AI chat with repeated development, code-generation, error-recovery, and fallback requests
+- [x] Inspect the connected GitHub import, analysis, and review-gated commit flow; request confirmation before any repository write
 - [x] Fix the reproducible production AI chat outage: five consecutive normal requests returned retryable HTTP 503 busy errors
 - [x] Prevent source-backed analysis from returning generic continuity guidance or exposing imported prompt content when external providers are unavailable
 - [x] Prevent source-backed analysis from returning generic continuity guidance or exposing imported prompt content when external providers are unavailable
 - [x] Require an authenticated DevDesk session before the server-side chat route consumes AI-provider capacity
 - [x] Expose safe new-file path staging in the review-gated GitHub commit interface without requiring an existing file selection
+- [ ] Run a controlled 20-prompt authenticated DevDesk chat reliability audit and record provider outcomes
+- [ ] Re-evaluate the GLM 5.2-first OpenRouter fallback order using currently available free chat models
+- [ ] Repair any reproducible server-side chat routing failures and re-test the live deployment

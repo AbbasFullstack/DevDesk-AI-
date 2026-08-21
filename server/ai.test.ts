@@ -111,6 +111,18 @@ test('chat routing keeps trying verified fallbacks after a model-specific 403 re
   });
 });
 
+test('GLM 5.2 skips its duplicate retry after a rate-limit response so an independent fallback can answer sooner', async () => {
+  await withMockedOpenRouter([
+    new Response('rate limited', { status: 429 }),
+    new Response(JSON.stringify({ model: 'first-fallback:free', choices: [{ message: { content: 'Recovered without repeating a rate-limited primary.' } }] }), { status: 200 }),
+  ], async (models) => {
+    const answer = await askDevDesk([{ role: 'user', content: 'Recover after a GLM rate limit.' }]);
+    assert.equal(answer.text, 'Recovered without repeating a rate-limited primary.');
+    assert.deepEqual(models, ['z-ai/glm-5.2:free', 'first-fallback:free']);
+    assert.deepEqual(answer.attempts, ['z-ai/glm-5.2:free (429)']);
+  });
+});
+
 test('chat returns the bounded no-key emergency response only after the GLM-first OpenRouter chain is exhausted', async () => {
   const originalFetch = globalThis.fetch;
   const originalEnv = { key: env.openRouterApiKey, model: env.openRouterModel, fallbacks: env.openRouterFallbackModels, timeout: env.openRouterTimeoutMs };
