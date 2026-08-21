@@ -1,17 +1,19 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { askDevDesk, buildModelAttemptSequence, buildModelCandidates, DEV_DESK_IDENTITY, EMERGENCY_CHAT_ENDPOINT, GROQ_CHAT_ENDPOINT, hasUnresolvedToolCall, ProviderCapacityError, resetChatCapacityCooldownForTests } from './ai';
+import { askDevDesk, buildModelAttemptSequence, buildModelCandidates, CEREBRAS_CHAT_ENDPOINT, DEV_DESK_IDENTITY, EMERGENCY_CHAT_ENDPOINT, GROQ_CHAT_ENDPOINT, XAI_CHAT_ENDPOINT, hasUnresolvedToolCall, ProviderCapacityError, resetChatCapacityCooldownForTests } from './ai';
 import { CURATED_FREE_OPENROUTER_FALLBACK_MODELS, env, GLM_PRIMARY_MODEL } from './env';
 
 async function withMockedOpenRouter(responses: Array<Response | Error>, run: (models: string[]) => Promise<void>) {
   const originalFetch = globalThis.fetch;
-  const originalEnv = { key: env.openRouterApiKey, model: env.openRouterModel, fallbacks: env.openRouterFallbackModels, timeout: env.openRouterTimeoutMs, groqKey: env.groqApiKey, groqModel: env.groqModel, groqTimeout: env.groqTimeoutMs };
+  const originalEnv = { key: env.openRouterApiKey, model: env.openRouterModel, fallbacks: env.openRouterFallbackModels, timeout: env.openRouterTimeoutMs, groqKey: env.groqApiKey, groqModel: env.groqModel, groqTimeout: env.groqTimeoutMs, xaiKey: env.xaiApiKey, xaiModel: env.xaiModel, xaiTimeout: env.xaiTimeoutMs, cerebrasKey: env.cerebrasApiKey, cerebrasModel: env.cerebrasModel, cerebrasTimeout: env.cerebrasTimeoutMs };
   const models: string[] = [];
   env.openRouterApiKey = 'test-key';
   env.openRouterModel = 'z-ai/glm-5.2:free';
   env.openRouterFallbackModels = ['first-fallback:free', 'second-fallback:free', 'third-fallback:free'];
   env.openRouterTimeoutMs = 100;
   env.groqApiKey = '';
+  env.xaiApiKey = '';
+  env.cerebrasApiKey = '';
   resetChatCapacityCooldownForTests();
   globalThis.fetch = (async (_input, init) => {
     const request = JSON.parse(String(init?.body)) as { model: string };
@@ -32,6 +34,12 @@ async function withMockedOpenRouter(responses: Array<Response | Error>, run: (mo
     env.groqApiKey = originalEnv.groqKey;
     env.groqModel = originalEnv.groqModel;
     env.groqTimeoutMs = originalEnv.groqTimeout;
+    env.xaiApiKey = originalEnv.xaiKey;
+    env.xaiModel = originalEnv.xaiModel;
+    env.xaiTimeoutMs = originalEnv.xaiTimeout;
+    env.cerebrasApiKey = originalEnv.cerebrasKey;
+    env.cerebrasModel = originalEnv.cerebrasModel;
+    env.cerebrasTimeoutMs = originalEnv.cerebrasTimeout;
     resetChatCapacityCooldownForTests();
   }
 }
@@ -176,6 +184,97 @@ test('ordinary chat uses configured independent Groq fallback after the GLM-firs
     env.groqApiKey = originalEnv.groqKey;
     env.groqModel = originalEnv.groqModel;
     env.groqTimeoutMs = originalEnv.groqTimeout;
+  }
+});
+
+test('ordinary chat tries configured xAI Grok before Groq after the GLM-first OpenRouter chain is exhausted', async () => {
+  const originalFetch = globalThis.fetch;
+  const originalEnv = { key: env.openRouterApiKey, model: env.openRouterModel, fallbacks: env.openRouterFallbackModels, timeout: env.openRouterTimeoutMs, groqKey: env.groqApiKey, groqModel: env.groqModel, groqTimeout: env.groqTimeoutMs, xaiKey: env.xaiApiKey, xaiModel: env.xaiModel, xaiTimeout: env.xaiTimeoutMs };
+  const requestedUrls: string[] = [];
+  env.openRouterApiKey = 'openrouter-test-key';
+  env.openRouterModel = 'z-ai/glm-5.2:free';
+  env.openRouterFallbackModels = ['first-fallback:free', 'second-fallback:free', 'third-fallback:free'];
+  env.openRouterTimeoutMs = 100;
+  env.xaiApiKey = 'xai-test-key';
+  env.xaiModel = 'grok-test-model';
+  env.xaiTimeoutMs = 100;
+  env.groqApiKey = 'groq-test-key';
+  globalThis.fetch = (async (input, init) => {
+    const url = String(input); requestedUrls.push(url);
+    if (url === XAI_CHAT_ENDPOINT) {
+      assert.equal(new Headers(init?.headers).get('authorization'), 'Bearer xai-test-key');
+      return new Response(JSON.stringify({ model: 'grok-test-model', choices: [{ message: { content: 'Recovered through xAI Grok.' } }] }), { status: 200 });
+    }
+    return new Response('provider unavailable', { status: 503 });
+  }) as typeof fetch;
+  try {
+    const answer = await askDevDesk([{ role: 'user', content: 'Recover through xAI Grok.' }]);
+    assert.equal(answer.text, 'Recovered through xAI Grok.');
+    assert.equal(answer.model, 'xai/grok-test-model');
+    assert.equal(requestedUrls.filter((url) => url.includes('openrouter.ai')).length, 5);
+    assert.equal(requestedUrls.at(-1), XAI_CHAT_ENDPOINT);
+    assert.equal(requestedUrls.includes(GROQ_CHAT_ENDPOINT), false);
+  } finally {
+    globalThis.fetch = originalFetch;
+    env.openRouterApiKey = originalEnv.key;
+    env.openRouterModel = originalEnv.model;
+    env.openRouterFallbackModels = originalEnv.fallbacks;
+    env.openRouterTimeoutMs = originalEnv.timeout;
+    env.groqApiKey = originalEnv.groqKey;
+    env.groqModel = originalEnv.groqModel;
+    env.groqTimeoutMs = originalEnv.groqTimeout;
+    env.xaiApiKey = originalEnv.xaiKey;
+    env.xaiModel = originalEnv.xaiModel;
+    env.xaiTimeoutMs = originalEnv.xaiTimeout;
+  }
+});
+
+test('ordinary chat tries configured Cerebras after xAI failure and before Groq', async () => {
+  const originalFetch = globalThis.fetch;
+  const originalEnv = { key: env.openRouterApiKey, model: env.openRouterModel, fallbacks: env.openRouterFallbackModels, timeout: env.openRouterTimeoutMs, groqKey: env.groqApiKey, groqModel: env.groqModel, groqTimeout: env.groqTimeoutMs, xaiKey: env.xaiApiKey, xaiModel: env.xaiModel, xaiTimeout: env.xaiTimeoutMs, cerebrasKey: env.cerebrasApiKey, cerebrasModel: env.cerebrasModel, cerebrasTimeout: env.cerebrasTimeoutMs };
+  const requestedUrls: string[] = [];
+  env.openRouterApiKey = 'openrouter-test-key';
+  env.openRouterModel = 'z-ai/glm-5.2:free';
+  env.openRouterFallbackModels = ['first-fallback:free', 'second-fallback:free', 'third-fallback:free'];
+  env.openRouterTimeoutMs = 100;
+  env.xaiApiKey = 'xai-test-key';
+  env.xaiModel = 'grok-test-model';
+  env.xaiTimeoutMs = 100;
+  env.cerebrasApiKey = 'cerebras-test-key';
+  env.cerebrasModel = 'cerebras-test-model';
+  env.cerebrasTimeoutMs = 100;
+  env.groqApiKey = 'groq-test-key';
+  globalThis.fetch = (async (input, init) => {
+    const url = String(input); requestedUrls.push(url);
+    if (url === XAI_CHAT_ENDPOINT) return new Response('xAI unavailable', { status: 503 });
+    if (url === CEREBRAS_CHAT_ENDPOINT) {
+      assert.equal(new Headers(init?.headers).get('authorization'), 'Bearer cerebras-test-key');
+      return new Response(JSON.stringify({ model: 'cerebras-test-model', choices: [{ message: { content: 'Recovered through Cerebras.' } }] }), { status: 200 });
+    }
+    return new Response('provider unavailable', { status: 503 });
+  }) as typeof fetch;
+  try {
+    const answer = await askDevDesk([{ role: 'user', content: 'Recover through Cerebras.' }]);
+    assert.equal(answer.text, 'Recovered through Cerebras.');
+    assert.equal(answer.model, 'cerebras/cerebras-test-model');
+    assert.equal(requestedUrls.filter((url) => url.includes('openrouter.ai')).length, 5);
+    assert.equal(requestedUrls.at(-1), CEREBRAS_CHAT_ENDPOINT);
+    assert.equal(requestedUrls.includes(GROQ_CHAT_ENDPOINT), false);
+  } finally {
+    globalThis.fetch = originalFetch;
+    env.openRouterApiKey = originalEnv.key;
+    env.openRouterModel = originalEnv.model;
+    env.openRouterFallbackModels = originalEnv.fallbacks;
+    env.openRouterTimeoutMs = originalEnv.timeout;
+    env.groqApiKey = originalEnv.groqKey;
+    env.groqModel = originalEnv.groqModel;
+    env.groqTimeoutMs = originalEnv.groqTimeout;
+    env.xaiApiKey = originalEnv.xaiKey;
+    env.xaiModel = originalEnv.xaiModel;
+    env.xaiTimeoutMs = originalEnv.xaiTimeout;
+    env.cerebrasApiKey = originalEnv.cerebrasKey;
+    env.cerebrasModel = originalEnv.cerebrasModel;
+    env.cerebrasTimeoutMs = originalEnv.cerebrasTimeout;
   }
 });
 

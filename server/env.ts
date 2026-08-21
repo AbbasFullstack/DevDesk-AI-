@@ -43,6 +43,15 @@ export const env = {
   groqApiKey: process.env.GROQ_API_KEY ?? '',
   groqModel: process.env.GROQ_MODEL ?? 'llama-3.3-70b-versatile',
   groqTimeoutMs: Number(process.env.GROQ_TIMEOUT_MS ?? 8_000),
+  // Optional xAI Grok fallback. xAI and Groq are different providers with
+  // separate credentials and endpoints; this remains server-side only.
+  xaiApiKey: process.env.XAI_API_KEY ?? '',
+  xaiModel: process.env.XAI_MODEL ?? 'grok-4.6',
+  xaiTimeoutMs: Number(process.env.XAI_TIMEOUT_MS ?? 8_000),
+  // Optional Cerebras fallback for ordinary chat, separate from xAI and Groq.
+  cerebrasApiKey: process.env.CEREBRAS_API_KEY ?? '',
+  cerebrasModel: process.env.CEREBRAS_MODEL ?? 'gpt-oss-120b',
+  cerebrasTimeoutMs: Number(process.env.CEREBRAS_TIMEOUT_MS ?? 8_000),
   maxInputCharacters: Number(process.env.MAX_INPUT_CHARACTERS ?? 12000),
   maxOutputTokens: Number(process.env.MAX_OUTPUT_TOKENS ?? 1400),
 };

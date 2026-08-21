@@ -18,6 +18,8 @@ export const DEV_DESK_IDENTITY = `You are DevDesk AI, a thoughtful senior softwa
 export const EMERGENCY_CHAT_ENDPOINT = 'https://oai.endpoints.kepler.ai.cloud.ovh.net/v1/chat/completions';
 export const EMERGENCY_CHAT_MODEL = 'gpt-oss-20b';
 export const GROQ_CHAT_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
+export const XAI_CHAT_ENDPOINT = 'https://api.x.ai/v1/chat/completions';
+export const CEREBRAS_CHAT_ENDPOINT = 'https://api.cerebras.ai/v1/chat/completions';
 const TEMPORARY_UNAVAILABLE_MESSAGE = 'DevDesk AI is temporarily busy. Please try again in a moment.';
 const MAX_PRODUCTION_OPENROUTER_ATTEMPTS = 5;
 const MAX_CHAT_PROVIDER_TIMEOUT_MS = 5_000;
@@ -121,6 +123,54 @@ async function askGroqFallback(messages: ChatMessage[], attempts: string[]): Pro
   }
 }
 
+async function askXaiFallback(messages: ChatMessage[], attempts: string[]): Promise<DevDeskAnswer | undefined> {
+  if (!env.xaiApiKey) return undefined;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), Math.min(env.xaiTimeoutMs, MAX_CHAT_PROVIDER_TIMEOUT_MS));
+  try {
+    const response = await fetch(XAI_CHAT_ENDPOINT, {
+      method: 'POST',
+      signal: controller.signal,
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${env.xaiApiKey}` },
+      body: JSON.stringify({ model: env.xaiModel, messages, max_tokens: env.maxOutputTokens, temperature: 0.35 }),
+    });
+    if (!response.ok) { attempts.push(`xai/${env.xaiModel} (${response.status})`); return undefined; }
+    const payload = await response.json().catch(() => undefined) as { model?: string; choices?: Array<{ message?: { content?: string } }> } | undefined;
+    const text = payload && validText(payload);
+    if (!text) { attempts.push(`xai/${env.xaiModel} (empty or unsafe response)`); return undefined; }
+    return { text, model: `xai/${payload.model ?? env.xaiModel}`, attempts };
+  } catch (issue) {
+    attempts.push(`xai/${env.xaiModel} (${issue instanceof Error && issue.name === 'AbortError' ? 'timeout' : 'network error'})`);
+    return undefined;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function askCerebrasFallback(messages: ChatMessage[], attempts: string[]): Promise<DevDeskAnswer | undefined> {
+  if (!env.cerebrasApiKey) return undefined;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), Math.min(env.cerebrasTimeoutMs, MAX_CHAT_PROVIDER_TIMEOUT_MS));
+  try {
+    const response = await fetch(CEREBRAS_CHAT_ENDPOINT, {
+      method: 'POST',
+      signal: controller.signal,
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${env.cerebrasApiKey}` },
+      body: JSON.stringify({ model: env.cerebrasModel, messages, max_tokens: env.maxOutputTokens, temperature: 0.35 }),
+    });
+    if (!response.ok) { attempts.push(`cerebras/${env.cerebrasModel} (${response.status})`); return undefined; }
+    const payload = await response.json().catch(() => undefined) as { model?: string; choices?: Array<{ message?: { content?: string } }> } | undefined;
+    const text = payload && validText(payload);
+    if (!text) { attempts.push(`cerebras/${env.cerebrasModel} (empty or unsafe response)`); return undefined; }
+    return { text, model: `cerebras/${payload.model ?? env.cerebrasModel}`, attempts };
+  } catch (issue) {
+    attempts.push(`cerebras/${env.cerebrasModel} (${issue instanceof Error && issue.name === 'AbortError' ? 'timeout' : 'network error'})`);
+    return undefined;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 function continuityGuidance(messages: ChatMessage[], attempts: string[]): DevDeskAnswer {
   const latestPrompt = messages.filter((message) => message.role === 'user').at(-1)?.content.trim() || 'your developer question';
   const codeRequest = /\b(code|typescript|javascript|react|next|function|component|api|bug|error)\b/i.test(latestPrompt);
@@ -193,17 +243,21 @@ export async function askDevDesk(messages: ChatMessage[], options: AskDevDeskOpt
   // Independent providers are restricted to ordinary general chat. Imported
   // repository excerpts never leave the configured source-analysis boundary.
   if (options.allowIndependentFallback !== false) {
+    const xaiAnswer = await askXaiFallback(enrichedMessages, attempts);
+    if (xaiAnswer) return xaiAnswer;
+    const cerebrasAnswer = await askCerebrasFallback(enrichedMessages, attempts);
+    if (cerebrasAnswer) return cerebrasAnswer;
     const groqAnswer = await askGroqFallback(enrichedMessages, attempts);
     if (groqAnswer) return groqAnswer;
   }
-  if (openRouterCoolingDown && !env.groqApiKey) {
+  if (openRouterCoolingDown && !env.xaiApiKey && !env.cerebrasApiKey && !env.groqApiKey) {
     if (options.allowContinuityResponse === false) throw new ProviderCapacityError(attempts);
     return continuityGuidance(messages, attempts);
   }
   // This no-key provider is intentionally reserved for ordinary chat only. It
   // gives users a best-effort response during a total OpenRouter free-tier
   // outage while keeping imported repository source on the configured service.
-  if (options.allowEmergencyFallback !== false && (!openRouterCoolingDown || Boolean(env.groqApiKey))) {
+  if (options.allowEmergencyFallback !== false && (!openRouterCoolingDown || Boolean(env.xaiApiKey) || Boolean(env.cerebrasApiKey) || Boolean(env.groqApiKey))) {
     const emergencyAnswer = await askEmergencyFallback(enrichedMessages, attempts);
     if (emergencyAnswer) return emergencyAnswer;
   }

@@ -174,3 +174,8 @@
 - [x] Design GLM 5.2-first cross-provider failover with independent provider health, timeout, and capacity rules
 - [x] Add optional server-side Groq fallback using a user-owned credential; never expose it to the browser
 - [x] Validate multi-provider failover with deterministic provider-outage, rate-limit, timeout, and success-path tests
+- [ ] Configure the user-authorized Grok API key only as a server-side Vercel environment variable for DevDesk AI
+- [ ] Verify deployed Grok fallback response after an authorized Vercel redeploy
+- [x] Add optional xAI Grok fallback with a distinct server-side XAI_API_KEY configuration and preserve the separate Groq adapter
+- [x] Add optional Cerebras fallback with a distinct server-side CEREBRAS_API_KEY configuration after xAI Grok and before Groq
+- [ ] Configure user-authorized xAI and Cerebras secrets only in Vercel, then verify the deployed failover order
