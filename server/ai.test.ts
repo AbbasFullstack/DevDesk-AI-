@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { askDevDesk, buildModelAttemptSequence, buildModelCandidates, DEV_DESK_IDENTITY, EMERGENCY_CHAT_ENDPOINT, hasUnresolvedToolCall } from './ai';
+import { askDevDesk, buildModelAttemptSequence, buildModelCandidates, DEV_DESK_IDENTITY, EMERGENCY_CHAT_ENDPOINT, hasUnresolvedToolCall, ProviderCapacityError } from './ai';
 import { CURATED_FREE_OPENROUTER_FALLBACK_MODELS, env, GLM_PRIMARY_MODEL } from './env';
 
 async function withMockedOpenRouter(responses: Array<Response | Error>, run: (models: string[]) => Promise<void>) {
@@ -156,5 +156,28 @@ test('chat routing returns transparent continuity guidance instead of a retryabl
     const answer = await askDevDesk([{ role: 'user', content: 'Write a TypeScript function while providers are unavailable.' }]);
     assert.equal(answer.model, 'continuity/provider-capacity');
     assert.match(answer.text, /will not invent unverified code/i);
+  });
+});
+
+test('source-backed callers can reject capacity continuity without exposing the imported prompt as an analysis result', async () => {
+  await withMockedOpenRouter([
+    new Response('unavailable', { status: 503 }),
+    new Response('unavailable', { status: 503 }),
+    new Response('unavailable', { status: 503 }),
+    new Response('unavailable', { status: 503 }),
+    new Response('unavailable', { status: 503 }),
+  ], async () => {
+    const importedMarker = 'PRIVATE_REPOSITORY_SOURCE_MARKER';
+    await assert.rejects(
+      askDevDesk(
+        [{ role: 'user', content: `Analyze this imported context: ${importedMarker}` }],
+        { allowEmergencyFallback: false, allowContinuityResponse: false },
+      ),
+      (issue: unknown) => {
+        assert.ok(issue instanceof ProviderCapacityError);
+        assert.doesNotMatch(issue.message, new RegExp(importedMarker));
+        return true;
+      },
+    );
   });
 });

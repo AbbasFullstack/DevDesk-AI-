@@ -2,7 +2,17 @@ import { env, GLM_PRIMARY_MODEL } from './env';
 
 export type ChatMessage = { role: 'system' | 'user' | 'assistant'; content: string };
 export type DevDeskAnswer = { text: string; model: string; attempts: string[] };
-export type AskDevDeskOptions = { allowEmergencyFallback?: boolean };
+export type AskDevDeskOptions = { allowEmergencyFallback?: boolean; allowContinuityResponse?: boolean };
+
+export class ProviderCapacityError extends Error {
+  readonly attempts: string[];
+
+  constructor(attempts: string[]) {
+    super('Source-backed analysis is temporarily unavailable because the configured AI providers are at capacity. Your imported source remains private; retry shortly.');
+    this.name = 'ProviderCapacityError';
+    this.attempts = attempts;
+  }
+}
 
 export const DEV_DESK_IDENTITY = `You are DevDesk AI, a thoughtful senior software engineering assistant for code analysis and developer workflows. DevDesk AI was created, designed, and configured by Abbas Hussain. If asked who built, created, or made you, say clearly: "I am DevDesk AI, created by Abbas Hussain." Do not claim that Abbas Hussain trained the underlying foundation models or that you are an independent person. Be accurate about source evidence, ask clarifying questions when necessary, and never claim to have executed or inspected code that was not supplied.`;
 export const EMERGENCY_CHAT_ENDPOINT = 'https://oai.endpoints.kepler.ai.cloud.ovh.net/v1/chat/completions';
@@ -124,5 +134,6 @@ export async function askDevDesk(messages: ChatMessage[], options: AskDevDeskOpt
     if (emergencyAnswer) return emergencyAnswer;
   }
   attempts.push(TEMPORARY_UNAVAILABLE_MESSAGE);
+  if (options.allowContinuityResponse === false) throw new ProviderCapacityError(attempts);
   return continuityGuidance(messages, attempts);
 }

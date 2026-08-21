@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { askDevDesk } from '@/server/ai';
+import { askDevDesk, ProviderCapacityError } from '@/server/ai';
 import { buildSourceAnalysisMessages } from '@/server/analysis-prompt';
 import { env } from '@/server/env';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
@@ -28,7 +28,7 @@ export async function POST(request: Request) {
   try {
     const answer = await askDevDesk(
       buildSourceAnalysisMessages({ projectName: project.name, branch: project.branch, question: input.data.question, context }),
-      { allowEmergencyFallback: false },
+      { allowEmergencyFallback: false, allowContinuityResponse: false },
     );
     await admin.from('analysis_runs').update({ status: 'complete', stage: 'complete', model: answer.model, completed_at: new Date().toISOString() }).eq('id', runStart.data.id);
     return NextResponse.json({ status: 'complete', analysisId: runStart.data.id, project: { id: project.id, name: project.name, branch: project.branch }, source: { fileCount: files.length, paths: files.map((file) => file.path) }, text: answer.text, model: answer.model, fallbackUsed: answer.attempts.length > 0 });
@@ -36,6 +36,7 @@ export async function POST(request: Request) {
     const message = issue instanceof Error ? issue.message : 'The analysis request failed.';
     await admin.from('analysis_runs').update({ status: 'failed', error_message: message, completed_at: new Date().toISOString() }).eq('id', runStart.data.id);
     console.error('[devdesk-analysis]', { message, projectId: project.id, model: env.openRouterModel, keyConfigured: Boolean(env.openRouterApiKey) });
+    if (issue instanceof ProviderCapacityError) return NextResponse.json({ error: message, retryable: true }, { status: 503 });
     return NextResponse.json({ error: message }, { status: 502 });
   }
 }
