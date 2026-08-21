@@ -168,3 +168,5 @@
 - [ ] Run a controlled 20-prompt authenticated DevDesk chat reliability audit and record provider outcomes
 - [ ] Re-evaluate the GLM 5.2-first OpenRouter fallback order using currently available free chat models
 - [ ] Repair any reproducible server-side chat routing failures and re-test the live deployment
+- [ ] Avoid multiplying one user chat request into repeated free-tier calls after an upstream or platform 429 response
+- [ ] Add a short server-side capacity cooldown so concurrent user prompts do not repeatedly exhaust free-model limits

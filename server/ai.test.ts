@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { askDevDesk, buildModelAttemptSequence, buildModelCandidates, DEV_DESK_IDENTITY, EMERGENCY_CHAT_ENDPOINT, hasUnresolvedToolCall, ProviderCapacityError } from './ai';
+import { askDevDesk, buildModelAttemptSequence, buildModelCandidates, DEV_DESK_IDENTITY, EMERGENCY_CHAT_ENDPOINT, hasUnresolvedToolCall, ProviderCapacityError, resetChatCapacityCooldownForTests } from './ai';
 import { CURATED_FREE_OPENROUTER_FALLBACK_MODELS, env, GLM_PRIMARY_MODEL } from './env';
 
 async function withMockedOpenRouter(responses: Array<Response | Error>, run: (models: string[]) => Promise<void>) {
@@ -11,6 +11,7 @@ async function withMockedOpenRouter(responses: Array<Response | Error>, run: (mo
   env.openRouterModel = 'z-ai/glm-5.2:free';
   env.openRouterFallbackModels = ['first-fallback:free', 'second-fallback:free', 'third-fallback:free'];
   env.openRouterTimeoutMs = 100;
+  resetChatCapacityCooldownForTests();
   globalThis.fetch = (async (_input, init) => {
     const request = JSON.parse(String(init?.body)) as { model: string };
     models.push(request.model);
@@ -27,6 +28,7 @@ async function withMockedOpenRouter(responses: Array<Response | Error>, run: (mo
     env.openRouterModel = originalEnv.model;
     env.openRouterFallbackModels = originalEnv.fallbacks;
     env.openRouterTimeoutMs = originalEnv.timeout;
+    resetChatCapacityCooldownForTests();
   }
 }
 
@@ -113,13 +115,26 @@ test('chat routing keeps trying verified fallbacks after a model-specific 403 re
 
 test('GLM 5.2 skips its duplicate retry after a rate-limit response so an independent fallback can answer sooner', async () => {
   await withMockedOpenRouter([
-    new Response('rate limited', { status: 429 }),
+    new Response(JSON.stringify({ error: { metadata: { provider_code: '429' } } }), { status: 429 }),
     new Response(JSON.stringify({ model: 'first-fallback:free', choices: [{ message: { content: 'Recovered without repeating a rate-limited primary.' } }] }), { status: 200 }),
   ], async (models) => {
     const answer = await askDevDesk([{ role: 'user', content: 'Recover after a GLM rate limit.' }]);
     assert.equal(answer.text, 'Recovered without repeating a rate-limited primary.');
     assert.deepEqual(models, ['z-ai/glm-5.2:free', 'first-fallback:free']);
-    assert.deepEqual(answer.attempts, ['z-ai/glm-5.2:free (429)']);
+    assert.deepEqual(answer.attempts, ['z-ai/glm-5.2:free (429 provider rate limit)']);
+  });
+});
+
+test('a platform 429 activates a cooldown instead of multiplying one free-tier request across every model', async () => {
+  await withMockedOpenRouter([
+    new Response(JSON.stringify({ error: { metadata: { error_type: 'rate_limit_exceeded' } } }), { status: 429 }),
+  ], async (models) => {
+    const first = await askDevDesk([{ role: 'user', content: 'Handle a platform rate limit.' }]);
+    const second = await askDevDesk([{ role: 'user', content: 'Do not consume another free-tier request.' }]);
+    assert.equal(first.model, 'continuity/provider-capacity');
+    assert.equal(second.model, 'continuity/provider-capacity');
+    assert.deepEqual(models, ['z-ai/glm-5.2:free', 'gpt-oss-20b']);
+    assert.deepEqual(second.attempts, ['OpenRouter platform rate-limit cooldown']);
   });
 });
 

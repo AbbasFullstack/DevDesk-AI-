@@ -21,6 +21,22 @@ const TEMPORARY_UNAVAILABLE_MESSAGE = 'DevDesk AI is temporarily busy. Please tr
 const MAX_PRODUCTION_OPENROUTER_ATTEMPTS = 5;
 const MAX_CHAT_PROVIDER_TIMEOUT_MS = 5_000;
 const EMERGENCY_CHAT_TIMEOUT_MS = 8_000;
+const PLATFORM_RATE_LIMIT_COOLDOWN_MS = 60_000;
+let platformRateLimitUntil = 0;
+
+type OpenRouterErrorPayload = { error?: { metadata?: { provider_code?: string | number } } };
+
+export function resetChatCapacityCooldownForTests() {
+  platformRateLimitUntil = 0;
+}
+
+function platformRateLimitActive() {
+  return Date.now() < platformRateLimitUntil;
+}
+
+function activatePlatformRateLimitCooldown() {
+  platformRateLimitUntil = Math.max(platformRateLimitUntil, Date.now() + PLATFORM_RATE_LIMIT_COOLDOWN_MS);
+}
 
 export function buildModelCandidates(primaryModel: string, fallbackModels: string[]) {
   return [...new Set([primaryModel, ...fallbackModels].map((model) => model.trim()).filter(Boolean))];
@@ -94,6 +110,12 @@ export async function askDevDesk(messages: ChatMessage[], options: AskDevDeskOpt
   const attempts: string[] = env.openRouterApiKey ? [] : ['OpenRouter (not configured)'];
   const enrichedMessages: ChatMessage[] = [{ role: 'system', content: DEV_DESK_IDENTITY }, ...messages];
 
+  if (candidates.length && platformRateLimitActive()) {
+    attempts.push('OpenRouter platform rate-limit cooldown');
+    if (options.allowContinuityResponse === false) throw new ProviderCapacityError(attempts);
+    return continuityGuidance(messages, attempts);
+  }
+
   for (let index = 0; index < candidates.length; index += 1) {
     const model = candidates[index]!;
     const controller = new AbortController();
@@ -106,7 +128,18 @@ export async function askDevDesk(messages: ChatMessage[], options: AskDevDeskOpt
         body: JSON.stringify({ model, messages: enrichedMessages, max_tokens: env.maxOutputTokens, temperature: 0.35 }),
       });
       if (!response.ok) {
-        attempts.push(`${model} (${response.status})`);
+        const errorPayload = await response.json().catch(() => undefined) as OpenRouterErrorPayload | undefined;
+        const providerSpecificRateLimit = response.status === 429 && Boolean(errorPayload?.error?.metadata?.provider_code);
+        attempts.push(`${model} (${response.status}${providerSpecificRateLimit ? ' provider rate limit' : ''})`);
+        // OpenRouter itself enforces free-tier request caps. Trying every model
+        // on a platform 429 consumes more of the same constrained budget and
+        // delays every user. OpenRouter already retries eligible providers for
+        // one model internally, so stop and cool down. Provider-specific 429s
+        // remain eligible for a different-model fallback.
+        if (response.status === 429 && !providerSpecificRateLimit) {
+          activatePlatformRateLimitCooldown();
+          break;
+        }
         // Keep GLM 5.2 first and retry temporary provider failures, but do not
         // duplicate an explicit 429 rate-limit response. Move immediately to
         // the independent free-router fallback instead of extending the wait.
