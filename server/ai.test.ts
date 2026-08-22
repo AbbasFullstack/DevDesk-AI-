@@ -329,13 +329,13 @@ test('ordinary chat can recover through the Vercel AI Gateway OIDC fallback afte
   env.xaiApiKey = '';
   env.cerebrasApiKey = '';
   env.aiGatewayApiKey = '';
-  env.vercelOidcToken = 'vercel-oidc-test-token';
+  env.vercelOidcToken = '';
   env.aiGatewayModel = 'openai/gpt-oss-20b';
   env.aiGatewayTimeoutMs = 100;
   globalThis.fetch = (async (input, init) => {
     const url = String(input); requestedUrls.push(url);
     if (url === VERCEL_AI_GATEWAY_CHAT_ENDPOINT) {
-      assert.equal(new Headers(init?.headers).get('authorization'), 'Bearer vercel-oidc-test-token');
+      assert.equal(new Headers(init?.headers).get('authorization'), 'Bearer runtime-vercel-oidc-test-token');
       const request = JSON.parse(String(init?.body)) as { model: string; reasoning_effort?: string };
       assert.equal(request.model, 'openai/gpt-oss-20b');
       assert.equal(request.reasoning_effort, 'low');
@@ -344,7 +344,7 @@ test('ordinary chat can recover through the Vercel AI Gateway OIDC fallback afte
     return new Response('provider unavailable', { status: 503 });
   }) as typeof fetch;
   try {
-    const answer = await askDevDesk([{ role: 'user', content: 'Recover through Vercel AI Gateway.' }]);
+    const answer = await askDevDesk([{ role: 'user', content: 'Recover through Vercel AI Gateway.' }], { vercelOidcToken: 'runtime-vercel-oidc-test-token' });
     assert.equal(answer.text, 'Recovered through Vercel AI Gateway.');
     assert.equal(answer.model, 'vercel-ai-gateway/openai/gpt-oss-20b');
     assert.equal(requestedUrls.filter((url) => url.includes('openrouter.ai')).length, 5);

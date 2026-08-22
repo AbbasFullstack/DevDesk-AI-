@@ -20,11 +20,14 @@ export async function POST(request: Request) {
   const supabase = await createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Authentication required.' }, { status: 401 });
+  // Vercel Functions supply this short-lived token at invocation time. It is
+  // used only for a server-to-server Gateway request and never persisted.
+  const vercelOidcToken = request.headers.get('x-vercel-oidc-token')?.trim() || undefined;
   try {
     const answer = await askDevDesk([
       { role: 'system', content: 'You are DevDesk AI, a precise senior engineer. Explain project issues with evidence, ask clarifying questions when context is missing, and never claim to have executed code you did not execute.' },
       ...input.data.messages,
-    ]);
+    ], { vercelOidcToken });
     const retryAfterSeconds = answer.model === 'continuity/provider-capacity' ? CHAT_CAPACITY_COOLDOWN_SECONDS : undefined;
     if (answer.model === 'continuity/provider-capacity') {
       // Logs exclude the user prompt, request body, and every credential value.

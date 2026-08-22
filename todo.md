@@ -196,3 +196,4 @@
 - [ ] Restore at least one model-backed general-chat provider with usable authorization or credits, then resume the blocked 10–15 turn production audit
 - [ ] Add Vercel AI Gateway OIDC fallback using `openai/gpt-oss-20b` for ordinary general chat only, after all existing providers fail
 - [ ] Run one user-authorized controlled Vercel AI Gateway production response test before the extended chat audit
+- [ ] Pass Vercel Function's `x-vercel-oidc-token` request header to the AI Gateway adapter instead of relying only on a build-time environment token

@@ -2,7 +2,7 @@ import { env, GLM_PRIMARY_MODEL } from './env';
 
 export type ChatMessage = { role: 'system' | 'user' | 'assistant'; content: string };
 export type DevDeskAnswer = { text: string; model: string; attempts: string[] };
-export type AskDevDeskOptions = { allowEmergencyFallback?: boolean; allowIndependentFallback?: boolean; allowContinuityResponse?: boolean };
+export type AskDevDeskOptions = { allowEmergencyFallback?: boolean; allowIndependentFallback?: boolean; allowContinuityResponse?: boolean; vercelOidcToken?: string };
 
 export class ProviderCapacityError extends Error {
   readonly attempts: string[];
@@ -173,11 +173,11 @@ async function askCerebrasFallback(messages: ChatMessage[], attempts: string[]):
   }
 }
 
-async function askVercelAiGatewayFallback(messages: ChatMessage[], attempts: string[]): Promise<DevDeskAnswer | undefined> {
+async function askVercelAiGatewayFallback(messages: ChatMessage[], attempts: string[], runtimeOidcToken?: string): Promise<DevDeskAnswer | undefined> {
   // Vercel supplies a short-lived OIDC token inside deployments. An explicitly
   // configured Gateway key is also supported for non-Vercel environments, but
   // neither credential is ever sent to the browser or written to logs.
-  const credential = env.aiGatewayApiKey || env.vercelOidcToken;
+  const credential = env.aiGatewayApiKey || runtimeOidcToken || env.vercelOidcToken;
   if (!credential) return undefined;
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), Math.min(env.aiGatewayTimeoutMs, MAX_INDEPENDENT_PROVIDER_TIMEOUT_MS));
@@ -295,7 +295,7 @@ export async function askDevDesk(messages: ChatMessage[], options: AskDevDeskOpt
   // chat. Imported repository excerpts remain within the source-analysis
   // provider boundary because those callers set allowIndependentFallback:false.
   if (options.allowIndependentFallback !== false) {
-    const gatewayAnswer = await askVercelAiGatewayFallback(enrichedMessages, attempts);
+    const gatewayAnswer = await askVercelAiGatewayFallback(enrichedMessages, attempts, options.vercelOidcToken);
     if (gatewayAnswer) return gatewayAnswer;
   }
   attempts.push(TEMPORARY_UNAVAILABLE_MESSAGE);
