@@ -189,7 +189,10 @@
 - [ ] Run a 100-check authenticated AI chat reliability and performance audit with measured latency and provider outcomes
 - [ ] Verify one 10–15 turn chat keeps every prior turn visible and maintains correct developer context
 - [ ] Diagnose and repair any reproducible slow response, provider failure, retry, or continuity-guidance defect found in the 100-check audit
-- [ ] Trace why live chat returned continuity guidance on audit turn one despite configured xAI and Cerebras fallbacks
+- [x] Trace why live chat returned continuity guidance on audit turn one despite configured xAI and Cerebras fallbacks
 - [ ] Verify configured xAI and Cerebras credentials against their provider endpoints without exposing values, then repair the first failing provider path
 - [ ] Give independent fallback providers a bounded 10-second response window and prioritize low-reasoning Cerebras recovery for faster ordinary chat
 - [ ] Log redacted provider attempt statuses only when continuity guidance is issued, so production failures can be diagnosed without logging prompts or keys
+- [ ] Restore at least one model-backed general-chat provider with usable authorization or credits, then resume the blocked 10–15 turn production audit
+- [ ] Add Vercel AI Gateway OIDC fallback using `openai/gpt-oss-20b` for ordinary general chat only, after all existing providers fail
+- [ ] Run one user-authorized controlled Vercel AI Gateway production response test before the extended chat audit

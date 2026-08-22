@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { askDevDesk, buildModelAttemptSequence, buildModelCandidates, CEREBRAS_CHAT_ENDPOINT, DEV_DESK_IDENTITY, EMERGENCY_CHAT_ENDPOINT, GROQ_CHAT_ENDPOINT, XAI_CHAT_ENDPOINT, hasUnresolvedToolCall, ProviderCapacityError, resetChatCapacityCooldownForTests } from './ai';
+import { askDevDesk, buildModelAttemptSequence, buildModelCandidates, CEREBRAS_CHAT_ENDPOINT, DEV_DESK_IDENTITY, EMERGENCY_CHAT_ENDPOINT, GROQ_CHAT_ENDPOINT, VERCEL_AI_GATEWAY_CHAT_ENDPOINT, XAI_CHAT_ENDPOINT, hasUnresolvedToolCall, ProviderCapacityError, resetChatCapacityCooldownForTests } from './ai';
 import { CURATED_FREE_OPENROUTER_FALLBACK_MODELS, env, GLM_PRIMARY_MODEL } from './env';
 
 async function withMockedOpenRouter(responses: Array<Response | Error>, run: (models: string[]) => Promise<void>) {
@@ -314,6 +314,54 @@ test('chat returns the bounded no-key emergency response only after the GLM-firs
     env.openRouterModel = originalEnv.model;
     env.openRouterFallbackModels = originalEnv.fallbacks;
     env.openRouterTimeoutMs = originalEnv.timeout;
+  }
+});
+
+test('ordinary chat can recover through the Vercel AI Gateway OIDC fallback after all existing providers fail', async () => {
+  const originalFetch = globalThis.fetch;
+  const originalEnv = { key: env.openRouterApiKey, model: env.openRouterModel, fallbacks: env.openRouterFallbackModels, timeout: env.openRouterTimeoutMs, groqKey: env.groqApiKey, xaiKey: env.xaiApiKey, cerebrasKey: env.cerebrasApiKey, gatewayKey: env.aiGatewayApiKey, oidcToken: env.vercelOidcToken, gatewayModel: env.aiGatewayModel, gatewayTimeout: env.aiGatewayTimeoutMs };
+  const requestedUrls: string[] = [];
+  env.openRouterApiKey = 'openrouter-test-key';
+  env.openRouterModel = 'z-ai/glm-5.2:free';
+  env.openRouterFallbackModels = ['first-fallback:free', 'second-fallback:free', 'third-fallback:free'];
+  env.openRouterTimeoutMs = 100;
+  env.groqApiKey = '';
+  env.xaiApiKey = '';
+  env.cerebrasApiKey = '';
+  env.aiGatewayApiKey = '';
+  env.vercelOidcToken = 'vercel-oidc-test-token';
+  env.aiGatewayModel = 'openai/gpt-oss-20b';
+  env.aiGatewayTimeoutMs = 100;
+  globalThis.fetch = (async (input, init) => {
+    const url = String(input); requestedUrls.push(url);
+    if (url === VERCEL_AI_GATEWAY_CHAT_ENDPOINT) {
+      assert.equal(new Headers(init?.headers).get('authorization'), 'Bearer vercel-oidc-test-token');
+      const request = JSON.parse(String(init?.body)) as { model: string; reasoning_effort?: string };
+      assert.equal(request.model, 'openai/gpt-oss-20b');
+      assert.equal(request.reasoning_effort, 'low');
+      return new Response(JSON.stringify({ model: 'openai/gpt-oss-20b', choices: [{ message: { content: 'Recovered through Vercel AI Gateway.' } }] }), { status: 200 });
+    }
+    return new Response('provider unavailable', { status: 503 });
+  }) as typeof fetch;
+  try {
+    const answer = await askDevDesk([{ role: 'user', content: 'Recover through Vercel AI Gateway.' }]);
+    assert.equal(answer.text, 'Recovered through Vercel AI Gateway.');
+    assert.equal(answer.model, 'vercel-ai-gateway/openai/gpt-oss-20b');
+    assert.equal(requestedUrls.filter((url) => url.includes('openrouter.ai')).length, 5);
+    assert.deepEqual(requestedUrls.slice(-2), [EMERGENCY_CHAT_ENDPOINT, VERCEL_AI_GATEWAY_CHAT_ENDPOINT]);
+  } finally {
+    globalThis.fetch = originalFetch;
+    env.openRouterApiKey = originalEnv.key;
+    env.openRouterModel = originalEnv.model;
+    env.openRouterFallbackModels = originalEnv.fallbacks;
+    env.openRouterTimeoutMs = originalEnv.timeout;
+    env.groqApiKey = originalEnv.groqKey;
+    env.xaiApiKey = originalEnv.xaiKey;
+    env.cerebrasApiKey = originalEnv.cerebrasKey;
+    env.aiGatewayApiKey = originalEnv.gatewayKey;
+    env.vercelOidcToken = originalEnv.oidcToken;
+    env.aiGatewayModel = originalEnv.gatewayModel;
+    env.aiGatewayTimeoutMs = originalEnv.gatewayTimeout;
   }
 });
 

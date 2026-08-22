@@ -52,6 +52,12 @@ export const env = {
   cerebrasApiKey: process.env.CEREBRAS_API_KEY ?? '',
   cerebrasModel: process.env.CEREBRAS_MODEL ?? 'gpt-oss-120b',
   cerebrasTimeoutMs: Number(process.env.CEREBRAS_TIMEOUT_MS ?? 10_000),
+  // AI Gateway can use Vercel's auto-provisioned deployment OIDC token without
+  // adding a new secret. An explicit key is only needed outside Vercel.
+  aiGatewayApiKey: process.env.AI_GATEWAY_API_KEY ?? '',
+  vercelOidcToken: process.env.VERCEL_OIDC_TOKEN ?? '',
+  aiGatewayModel: process.env.VERCEL_AI_GATEWAY_MODEL ?? 'openai/gpt-oss-20b',
+  aiGatewayTimeoutMs: Number(process.env.VERCEL_AI_GATEWAY_TIMEOUT_MS ?? 10_000),
   maxInputCharacters: Number(process.env.MAX_INPUT_CHARACTERS ?? 12000),
   maxOutputTokens: Number(process.env.MAX_OUTPUT_TOKENS ?? 1400),
 };

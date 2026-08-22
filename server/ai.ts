@@ -20,6 +20,7 @@ export const EMERGENCY_CHAT_MODEL = 'gpt-oss-20b';
 export const GROQ_CHAT_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
 export const XAI_CHAT_ENDPOINT = 'https://api.x.ai/v1/chat/completions';
 export const CEREBRAS_CHAT_ENDPOINT = 'https://api.cerebras.ai/v1/chat/completions';
+export const VERCEL_AI_GATEWAY_CHAT_ENDPOINT = 'https://ai-gateway.vercel.sh/v1/chat/completions';
 const TEMPORARY_UNAVAILABLE_MESSAGE = 'DevDesk AI is temporarily busy. Please try again in a moment.';
 const MAX_PRODUCTION_OPENROUTER_ATTEMPTS = 5;
 const MAX_CHAT_PROVIDER_TIMEOUT_MS = 5_000;
@@ -172,6 +173,34 @@ async function askCerebrasFallback(messages: ChatMessage[], attempts: string[]):
   }
 }
 
+async function askVercelAiGatewayFallback(messages: ChatMessage[], attempts: string[]): Promise<DevDeskAnswer | undefined> {
+  // Vercel supplies a short-lived OIDC token inside deployments. An explicitly
+  // configured Gateway key is also supported for non-Vercel environments, but
+  // neither credential is ever sent to the browser or written to logs.
+  const credential = env.aiGatewayApiKey || env.vercelOidcToken;
+  if (!credential) return undefined;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), Math.min(env.aiGatewayTimeoutMs, MAX_INDEPENDENT_PROVIDER_TIMEOUT_MS));
+  try {
+    const response = await fetch(VERCEL_AI_GATEWAY_CHAT_ENDPOINT, {
+      method: 'POST',
+      signal: controller.signal,
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${credential}` },
+      body: JSON.stringify({ model: env.aiGatewayModel, messages, max_tokens: Math.min(env.maxOutputTokens, 900), temperature: 0.35, reasoning_effort: 'low' }),
+    });
+    if (!response.ok) { attempts.push(`vercel-ai-gateway/${env.aiGatewayModel} (${response.status})`); return undefined; }
+    const payload = await response.json().catch(() => undefined) as { model?: string; choices?: Array<{ message?: { content?: string } }> } | undefined;
+    const text = payload && validText(payload);
+    if (!text) { attempts.push(`vercel-ai-gateway/${env.aiGatewayModel} (empty or unsafe response)`); return undefined; }
+    return { text, model: `vercel-ai-gateway/${payload.model ?? env.aiGatewayModel}`, attempts };
+  } catch (issue) {
+    attempts.push(`vercel-ai-gateway/${env.aiGatewayModel} (${issue instanceof Error && issue.name === 'AbortError' ? 'timeout' : 'network error'})`);
+    return undefined;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 function continuityGuidance(messages: ChatMessage[], attempts: string[]): DevDeskAnswer {
   const latestPrompt = messages.filter((message) => message.role === 'user').at(-1)?.content.trim() || 'your developer question';
   const codeRequest = /\b(code|typescript|javascript|react|next|function|component|api|bug|error)\b/i.test(latestPrompt);
@@ -261,6 +290,13 @@ export async function askDevDesk(messages: ChatMessage[], options: AskDevDeskOpt
   if (options.allowEmergencyFallback !== false && (!openRouterCoolingDown || Boolean(env.xaiApiKey) || Boolean(env.cerebrasApiKey) || Boolean(env.groqApiKey))) {
     const emergencyAnswer = await askEmergencyFallback(enrichedMessages, attempts);
     if (emergencyAnswer) return emergencyAnswer;
+  }
+  // This user-authorized paid recovery route is limited to ordinary general
+  // chat. Imported repository excerpts remain within the source-analysis
+  // provider boundary because those callers set allowIndependentFallback:false.
+  if (options.allowIndependentFallback !== false) {
+    const gatewayAnswer = await askVercelAiGatewayFallback(enrichedMessages, attempts);
+    if (gatewayAnswer) return gatewayAnswer;
   }
   attempts.push(TEMPORARY_UNAVAILABLE_MESSAGE);
   if (options.allowContinuityResponse === false) throw new ProviderCapacityError(attempts);
