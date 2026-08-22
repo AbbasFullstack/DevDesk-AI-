@@ -23,6 +23,7 @@ export const CEREBRAS_CHAT_ENDPOINT = 'https://api.cerebras.ai/v1/chat/completio
 const TEMPORARY_UNAVAILABLE_MESSAGE = 'DevDesk AI is temporarily busy. Please try again in a moment.';
 const MAX_PRODUCTION_OPENROUTER_ATTEMPTS = 5;
 const MAX_CHAT_PROVIDER_TIMEOUT_MS = 5_000;
+const MAX_INDEPENDENT_PROVIDER_TIMEOUT_MS = 10_000;
 const EMERGENCY_CHAT_TIMEOUT_MS = 8_000;
 const PLATFORM_RATE_LIMIT_COOLDOWN_MS = 60_000;
 let platformRateLimitUntil = 0;
@@ -126,7 +127,7 @@ async function askGroqFallback(messages: ChatMessage[], attempts: string[]): Pro
 async function askXaiFallback(messages: ChatMessage[], attempts: string[]): Promise<DevDeskAnswer | undefined> {
   if (!env.xaiApiKey) return undefined;
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), Math.min(env.xaiTimeoutMs, MAX_CHAT_PROVIDER_TIMEOUT_MS));
+  const timeout = setTimeout(() => controller.abort(), Math.min(env.xaiTimeoutMs, MAX_INDEPENDENT_PROVIDER_TIMEOUT_MS));
   try {
     const response = await fetch(XAI_CHAT_ENDPOINT, {
       method: 'POST',
@@ -150,13 +151,13 @@ async function askXaiFallback(messages: ChatMessage[], attempts: string[]): Prom
 async function askCerebrasFallback(messages: ChatMessage[], attempts: string[]): Promise<DevDeskAnswer | undefined> {
   if (!env.cerebrasApiKey) return undefined;
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), Math.min(env.cerebrasTimeoutMs, MAX_CHAT_PROVIDER_TIMEOUT_MS));
+  const timeout = setTimeout(() => controller.abort(), Math.min(env.cerebrasTimeoutMs, MAX_INDEPENDENT_PROVIDER_TIMEOUT_MS));
   try {
     const response = await fetch(CEREBRAS_CHAT_ENDPOINT, {
       method: 'POST',
       signal: controller.signal,
       headers: { 'content-type': 'application/json', authorization: `Bearer ${env.cerebrasApiKey}` },
-      body: JSON.stringify({ model: env.cerebrasModel, messages, max_tokens: env.maxOutputTokens, temperature: 0.35 }),
+      body: JSON.stringify({ model: env.cerebrasModel, messages, max_tokens: env.maxOutputTokens, temperature: 0.35, reasoning_effort: 'low' }),
     });
     if (!response.ok) { attempts.push(`cerebras/${env.cerebrasModel} (${response.status})`); return undefined; }
     const payload = await response.json().catch(() => undefined) as { model?: string; choices?: Array<{ message?: { content?: string } }> } | undefined;

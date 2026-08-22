@@ -26,6 +26,14 @@ export async function POST(request: Request) {
       ...input.data.messages,
     ]);
     const retryAfterSeconds = answer.model === 'continuity/provider-capacity' ? CHAT_CAPACITY_COOLDOWN_SECONDS : undefined;
+    if (answer.model === 'continuity/provider-capacity') {
+      // Logs exclude the user prompt, request body, and every credential value.
+      // Provider/status names are sufficient for safely diagnosing a live outage.
+      console.warn('[devdesk-chat] all model-backed fallbacks unavailable', {
+        attemptCount: answer.attempts.length,
+        attempts: answer.attempts,
+      });
+    }
     return NextResponse.json({ text: answer.text, model: answer.model, fallbackUsed: answer.attempts.length > 0, attemptCount: answer.attempts.length + 1, retryAfterSeconds });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'DevDesk AI is temporarily busy. Please try again in a moment.';

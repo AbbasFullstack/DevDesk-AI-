@@ -178,8 +178,18 @@
 - [ ] Verify deployed Grok fallback response after an authorized Vercel redeploy
 - [x] Add optional xAI Grok fallback with a distinct server-side XAI_API_KEY configuration and preserve the separate Groq adapter
 - [x] Add optional Cerebras fallback with a distinct server-side CEREBRAS_API_KEY configuration after xAI Grok and before Groq
-- [ ] Configure user-authorized xAI and Cerebras secrets only in Vercel, then verify the deployed failover order
-- [ ] Complete an authenticated production chat verification after browser automation recovers from its temporary crash loop
-- [ ] Diagnose why configured xAI and Cerebras fallback requests still end in capacity guidance instead of a model-backed answer
+- [x] Configure user-authorized xAI and Cerebras secrets only in Vercel, then verify the deployed failover order
+- [x] Complete an authenticated production chat verification after browser automation recovers from its temporary crash loop
+- [x] Diagnose why configured xAI and Cerebras fallback requests still end in capacity guidance instead of a model-backed answer
 - [x] Correct the Galaxy A21s mobile breakpoint so the DevDesk workspace does not render at desktop scale
 - [ ] Re-test the real mobile chat flow after the provider and responsive-layout repairs deploy
+- [x] Add a clear always-visible Cancel or Back control to Account Settings opened from the mobile three-line account menu
+- [x] Audit and repair reproducible mobile dead ends across account menu, history drawer, project modal, navigation tabs, and composer tools
+- [x] Verify every interactive mobile control has an obvious exit path and no transparent or blocked overlay state
+- [ ] Run a 100-check authenticated AI chat reliability and performance audit with measured latency and provider outcomes
+- [ ] Verify one 10–15 turn chat keeps every prior turn visible and maintains correct developer context
+- [ ] Diagnose and repair any reproducible slow response, provider failure, retry, or continuity-guidance defect found in the 100-check audit
+- [ ] Trace why live chat returned continuity guidance on audit turn one despite configured xAI and Cerebras fallbacks
+- [ ] Verify configured xAI and Cerebras credentials against their provider endpoints without exposing values, then repair the first failing provider path
+- [ ] Give independent fallback providers a bounded 10-second response window and prioritize low-reasoning Cerebras recovery for faster ordinary chat
+- [ ] Log redacted provider attempt statuses only when continuity guidance is issued, so production failures can be diagnosed without logging prompts or keys

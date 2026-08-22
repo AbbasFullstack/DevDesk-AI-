@@ -233,6 +233,7 @@ test('ordinary chat tries configured Cerebras after xAI failure and before Groq'
   const originalFetch = globalThis.fetch;
   const originalEnv = { key: env.openRouterApiKey, model: env.openRouterModel, fallbacks: env.openRouterFallbackModels, timeout: env.openRouterTimeoutMs, groqKey: env.groqApiKey, groqModel: env.groqModel, groqTimeout: env.groqTimeoutMs, xaiKey: env.xaiApiKey, xaiModel: env.xaiModel, xaiTimeout: env.xaiTimeoutMs, cerebrasKey: env.cerebrasApiKey, cerebrasModel: env.cerebrasModel, cerebrasTimeout: env.cerebrasTimeoutMs };
   const requestedUrls: string[] = [];
+  const cerebrasRequests: Array<{ model: string; reasoning_effort?: string }> = [];
   env.openRouterApiKey = 'openrouter-test-key';
   env.openRouterModel = 'z-ai/glm-5.2:free';
   env.openRouterFallbackModels = ['first-fallback:free', 'second-fallback:free', 'third-fallback:free'];
@@ -249,6 +250,7 @@ test('ordinary chat tries configured Cerebras after xAI failure and before Groq'
     if (url === XAI_CHAT_ENDPOINT) return new Response('xAI unavailable', { status: 503 });
     if (url === CEREBRAS_CHAT_ENDPOINT) {
       assert.equal(new Headers(init?.headers).get('authorization'), 'Bearer cerebras-test-key');
+      cerebrasRequests.push(JSON.parse(String(init?.body)) as { model: string; reasoning_effort?: string });
       return new Response(JSON.stringify({ model: 'cerebras-test-model', choices: [{ message: { content: 'Recovered through Cerebras.' } }] }), { status: 200 });
     }
     return new Response('provider unavailable', { status: 503 });
@@ -260,6 +262,9 @@ test('ordinary chat tries configured Cerebras after xAI failure and before Groq'
     assert.equal(requestedUrls.filter((url) => url.includes('openrouter.ai')).length, 5);
     assert.equal(requestedUrls.at(-1), CEREBRAS_CHAT_ENDPOINT);
     assert.equal(requestedUrls.includes(GROQ_CHAT_ENDPOINT), false);
+    assert.equal(cerebrasRequests.length, 1);
+    assert.equal(cerebrasRequests[0]?.model, 'cerebras-test-model');
+    assert.equal(cerebrasRequests[0]?.reasoning_effort, 'low');
   } finally {
     globalThis.fetch = originalFetch;
     env.openRouterApiKey = originalEnv.key;
