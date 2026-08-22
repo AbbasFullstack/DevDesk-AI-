@@ -187,20 +187,22 @@
 - [x] Audit and repair reproducible mobile dead ends across account menu, history drawer, project modal, navigation tabs, and composer tools
 - [x] Verify every interactive mobile control has an obvious exit path and no transparent or blocked overlay state
 - [ ] Run a 100-check authenticated AI chat reliability and performance audit with measured latency and provider outcomes
-- [ ] Verify one 10–15 turn chat keeps every prior turn visible and maintains correct developer context
+- [x] Verify one 10–15 turn chat keeps every prior turn visible and maintains correct developer context
 - [ ] Diagnose and repair any reproducible slow response, provider failure, retry, or continuity-guidance defect found in the 100-check audit
 - [x] Trace why live chat returned continuity guidance on audit turn one despite configured xAI and Cerebras fallbacks
 - [ ] Verify configured xAI and Cerebras credentials against their provider endpoints without exposing values, then repair the first failing provider path
-- [ ] Give independent fallback providers a bounded 10-second response window and prioritize low-reasoning Cerebras recovery for faster ordinary chat
-- [ ] Log redacted provider attempt statuses only when continuity guidance is issued, so production failures can be diagnosed without logging prompts or keys
-- [ ] Restore at least one model-backed general-chat provider with usable authorization or credits, then resume the blocked 10–15 turn production audit
-- [ ] Add Vercel AI Gateway OIDC fallback using `openai/gpt-oss-20b` for ordinary general chat only, after all existing providers fail
-- [ ] Run one user-authorized controlled Vercel AI Gateway production response test before the extended chat audit
-- [ ] Pass Vercel Function's `x-vercel-oidc-token` request header to the AI Gateway adapter instead of relying only on a build-time environment token
+- [x] Give independent fallback providers a bounded 10-second response window and prioritize low-reasoning Cerebras recovery for faster ordinary chat
+- [x] Log redacted provider attempt statuses only when continuity guidance is issued, so production failures can be diagnosed without logging prompts or keys
+- [x] Restore at least one model-backed general-chat provider with usable authorization or credits, then resume the blocked 10–15 turn production audit
+- [x] Add Vercel AI Gateway OIDC fallback using `openai/gpt-oss-20b` for ordinary general chat only, after all existing providers fail
+- [x] Run one user-authorized controlled Vercel AI Gateway production response test before the extended chat audit
+- [x] Pass Vercel Function's `x-vercel-oidc-token` request header to the AI Gateway adapter instead of relying only on a build-time environment token
 - [ ] Enable usable Vercel AI Gateway credit or billing before relying on its OIDC fallback; live OIDC request currently reaches Gateway but returns HTTP 403
-- [ ] Evaluate and verify a no-card, server-side general-chat fallback that does not expose credentials in the browser
-- [ ] Validate the user-provided server-only Groq key against a lightweight provider endpoint, then verify the existing Groq chat fallback in production
-- [ ] Replace the confirmed retired `groq/llama-3.3-70b-versatile` fallback default with an officially current Groq free-tier chat model and re-run the sequential audit
-- [ ] Repoint the obsolete deleted `DevDeskAI` Git remote to the user-selected `DevDesk-AI-` repository only after explicit confirmation of the corrected target
-- [ ] Grant the connected `AbbasFullstack` GitHub account write access to `Muneeza2071/DevDesk-AI-`, then push the already validated local repair commit
-- [ ] Relink the Vercel `dev-desk-ai` project from deleted `Muneeza2071/DevDeskAI` to the corrected `Muneeza2071/DevDesk-AI-` GitHub repository before expecting automatic deployments
+- [x] Evaluate and verify a no-card, server-side general-chat fallback that does not expose credentials in the browser
+- [x] Validate the user-provided server-only Groq key against a lightweight provider endpoint, then verify the existing Groq chat fallback in production
+- [x] Replace the confirmed retired `groq/llama-3.3-70b-versatile` fallback default with an officially current Groq free-tier chat model and re-run the sequential audit
+- [x] Repoint the obsolete deleted `DevDeskAI` Git remote to the user-selected `DevDesk-AI-` repository only after explicit confirmation of the corrected target
+- [x] Grant the connected `AbbasFullstack` GitHub account write access to `Muneeza2071/DevDesk-AI-`, then push the already validated local repair commit
+- [x] Relink the Vercel `dev-desk-ai` project from deleted `Muneeza2071/DevDeskAI` to the corrected `Muneeza2071/DevDesk-AI-` GitHub repository before expecting automatic deployments
+- [ ] Push final audit checklist completion markers to GitHub and confirm the corrected repository head
+- [ ] Review DevDesk AI portfolio showcase readiness with its tested functionality and remaining external-provider limitations
