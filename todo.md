@@ -197,3 +197,7 @@
 - [ ] Add Vercel AI Gateway OIDC fallback using `openai/gpt-oss-20b` for ordinary general chat only, after all existing providers fail
 - [ ] Run one user-authorized controlled Vercel AI Gateway production response test before the extended chat audit
 - [ ] Pass Vercel Function's `x-vercel-oidc-token` request header to the AI Gateway adapter instead of relying only on a build-time environment token
+- [ ] Enable usable Vercel AI Gateway credit or billing before relying on its OIDC fallback; live OIDC request currently reaches Gateway but returns HTTP 403
+- [ ] Evaluate and verify a no-card, server-side general-chat fallback that does not expose credentials in the browser
+- [ ] Validate the user-provided server-only Groq key against a lightweight provider endpoint, then verify the existing Groq chat fallback in production
+- [ ] Replace the confirmed retired `groq/llama-3.3-70b-versatile` fallback default with an officially current Groq free-tier chat model and re-run the sequential audit

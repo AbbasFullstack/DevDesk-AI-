@@ -75,8 +75,12 @@ test('DevDesk preserves GLM 5.2 first with 15-plus curated free fallback models'
 });
 
 test('DevDesk identity credits Abbas Hussain without claiming foundation-model training', () => {
-  assert.match(DEV_DESK_IDENTITY, /DevDesk AI, created by Abbas Hussain/i);
+  assert.match(DEV_DESK_IDENTITY, /created, designed, and configured by Abbas Hussain/i);
   assert.match(DEV_DESK_IDENTITY, /Do not claim that Abbas Hussain trained the underlying foundation models/i);
+});
+
+test('Groq fallback defaults to an officially current free-tier chat model', () => {
+  assert.equal(env.groqModel, 'openai/gpt-oss-20b');
 });
 
 test('unresolved model tool calls are rejected so routing can continue to another text model', () => {

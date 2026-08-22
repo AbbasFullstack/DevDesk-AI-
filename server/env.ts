@@ -41,7 +41,7 @@ export const env = {
   // Optional independent general-chat fallback. This key must remain server-side
   // and is deliberately not used for imported repository source analysis.
   groqApiKey: process.env.GROQ_API_KEY ?? '',
-  groqModel: process.env.GROQ_MODEL ?? 'llama-3.3-70b-versatile',
+  groqModel: process.env.GROQ_MODEL ?? 'openai/gpt-oss-20b',
   groqTimeoutMs: Number(process.env.GROQ_TIMEOUT_MS ?? 8_000),
   // Optional xAI Grok fallback. xAI and Groq are different providers with
   // separate credentials and endpoints; this remains server-side only.
