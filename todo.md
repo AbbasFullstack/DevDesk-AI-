@@ -201,3 +201,6 @@
 - [ ] Evaluate and verify a no-card, server-side general-chat fallback that does not expose credentials in the browser
 - [ ] Validate the user-provided server-only Groq key against a lightweight provider endpoint, then verify the existing Groq chat fallback in production
 - [ ] Replace the confirmed retired `groq/llama-3.3-70b-versatile` fallback default with an officially current Groq free-tier chat model and re-run the sequential audit
+- [ ] Repoint the obsolete deleted `DevDeskAI` Git remote to the user-selected `DevDesk-AI-` repository only after explicit confirmation of the corrected target
+- [ ] Grant the connected `AbbasFullstack` GitHub account write access to `Muneeza2071/DevDesk-AI-`, then push the already validated local repair commit
+- [ ] Relink the Vercel `dev-desk-ai` project from deleted `Muneeza2071/DevDeskAI` to the corrected `Muneeza2071/DevDesk-AI-` GitHub repository before expecting automatic deployments
