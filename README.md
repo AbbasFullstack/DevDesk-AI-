@@ -6,6 +6,8 @@
   <a href="https://dev-desk-ai-phi.vercel.app"><img src="https://img.shields.io/badge/Live%20Demo-dev--desk--ai--phi.vercel.app-00C7B7?style=for-the-badge&logo=vercel&logoColor=white" alt="Live Demo" /></a>
   <a href="https://github.com/Muneeza2071/DevDesk-AI-"><img src="https://img.shields.io/badge/Source%20Code-GitHub-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub source code" /></a>
   <a href="https://vercel.com"><img src="https://img.shields.io/badge/Deployed%20with-Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="Deployed with Vercel" /></a>
+  <a href="https://abbas-portfolio-beta.vercel.app"><img src="https://img.shields.io/badge/Portfolio-Live_Projects-2563EB?style=for-the-badge&logo=vercel&logoColor=white" alt="Abbas Hussain portfolio" /></a>
+  <a href="https://www.linkedin.com/in/abbas-hussain-56a61338b/"><img src="https://img.shields.io/badge/LinkedIn-Abbas_Hussain-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white" alt="Abbas Hussain LinkedIn profile" /></a>
 </p>
 
 <p align="center">
