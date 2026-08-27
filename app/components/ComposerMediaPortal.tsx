@@ -6,7 +6,7 @@ import { createPortal } from 'react-dom';
 import './ComposerMediaPortal.css';
 
 export function ComposerMediaPortal() {
-  const [target, setTarget] = useState<HTMLElement | null>(null);
+  const [target] = useState<HTMLElement | null>(() => typeof document === 'undefined' ? null : document.createElement('div'));
   const [open, setOpen] = useState(false);
   const [imagePanel, setImagePanel] = useState(false);
   const [imagePrompt, setImagePrompt] = useState('');
@@ -18,15 +18,16 @@ export function ComposerMediaPortal() {
   const [imageStatus, setImageStatus] = useState('');
 
   useEffect(() => {
+    if (!target) return;
     const tools = document.querySelector<HTMLElement>('.composer-tools');
     const send = tools?.querySelector<HTMLElement>('.send-button');
     if (!tools || !send) return;
-    const host = document.createElement('div');
-    host.className = 'composer-media-portal-host';
-    tools.insertBefore(host, send);
-    setTarget(host);
-    return () => { host.remove(); setTarget(null); };
-  }, []);
+    // This DOM node is intentionally prepared for an external portal host.
+    // eslint-disable-next-line react-hooks/immutability
+    target.className = 'composer-media-portal-host';
+    tools.insertBefore(target, send);
+    return () => { target.remove(); };
+  }, [target]);
 
 
   async function generateImage(event: React.FormEvent) {

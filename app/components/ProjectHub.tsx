@@ -10,10 +10,9 @@ type Props = { open: boolean; initialTab?: Tab; onClose: () => void; selectedRep
 type Tab = 'create' | 'github' | 'zip' | 'manage' | 'commit';
 
 export function ProjectHub({ open, initialTab = 'create', onClose, selectedRepo, importedProject, onImported, onRemoved }: Props) {
-  const [tab, setTab] = useState<Tab>('create'); const [repos, setRepos] = useState<GitHubRepo[]>([]); const [projectName, setProjectName] = useState(''); const [archive, setArchive] = useState<File>();
+  const [tab, setTab] = useState<Tab>(initialTab); const [repos, setRepos] = useState<GitHubRepo[]>([]); const [projectName, setProjectName] = useState(''); const [archive, setArchive] = useState<File>();
   const [loading, setLoading] = useState(false); const [notice, setNotice] = useState(''); const [error, setError] = useState(''); const [filePath, setFilePath] = useState(''); const [fileContent, setFileContent] = useState(''); const [fileSha, setFileSha] = useState(''); const [commitMessage, setCommitMessage] = useState(''); const [approved, setApproved] = useState(false); const [createNewFile, setCreateNewFile] = useState(false); const [projects, setProjects] = useState<ProjectSummary[]>([]); const [confirmRemovalId, setConfirmRemovalId] = useState<string>();
 
-  useEffect(() => { if (!open) return; setTab(initialTab); setError(''); setNotice(''); }, [open, initialTab]);
   useEffect(() => { if (!open) return; if (tab === 'github') void loadRepos(); if (tab === 'manage') void loadProjects(); }, [open, tab]);
   async function apiJson(url: string, init?: RequestInit) { const response = await fetch(url, init); const payload = await response.json(); if (!response.ok) throw new Error(payload.error ?? 'Request failed.'); return payload; }
   async function loadRepos() { try { const payload = await apiJson('/api/github/repos'); setRepos(payload.repositories ?? []); } catch (issue) { setError(issue instanceof Error ? issue.message : 'Could not load GitHub repositories.'); } }
