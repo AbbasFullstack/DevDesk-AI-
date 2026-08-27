@@ -36,8 +36,10 @@ jobs:
       - name: Type check
         run: pnpm check
 
-      - name: Run tests
-        run: pnpm test
+      - name: Run deterministic tests
+        env:
+          DEV_DESK_CHAT_HISTORY_METADATA_ENABLED: 'true'
+        run: pnpm exec tsx --test $(find server app -name '*.test.ts' ! -name 'groq.secret.test.ts' -print)
 
       - name: Build production app
         run: pnpm build

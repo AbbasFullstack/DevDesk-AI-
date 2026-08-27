@@ -19,13 +19,14 @@ export function AuthControls({ onRepositorySelected, onOpenHistory, onOpenProjec
     if (!configured) return;
     const supabase = createSupabaseBrowserClient();
     void supabase.auth.getUser().then(({ data }) => { setSessionEmail(data.user?.email ?? undefined); setSessionUserId(data.user?.id); setAuthResolved(true); });
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => { setSessionEmail(nextSession?.user?.email ?? undefined); setSessionUserId(nextSession?.user?.id); setAuthResolved(true); });
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => { setSessionEmail(nextSession?.user?.email ?? undefined); setSessionUserId(nextSession?.user?.id); setAuthResolved(true); if (!nextSession) { setGithubState('disconnected'); setGithubLogin(''); setRepos([]); setReposOpen(false); } });
     return () => listener.subscription.unsubscribe();
   }, [configured]);
 
   useEffect(() => { if (authResolved) onAuthUserChange?.(sessionUserId); }, [authResolved, onAuthUserChange, sessionUserId]);
 
   async function requestRepos(openPanel: boolean) {
+    setGithubState('checking');
     const response = await fetch('/api/github/repos'); const payload = await response.json();
     if (!response.ok) throw new Error(payload.error ?? 'Could not load repositories.');
     setRepos(payload.repositories ?? []); setGithubState(payload.connected ? 'connected' : 'disconnected'); setGithubLogin(payload.login ?? '');
@@ -33,8 +34,8 @@ export function AuthControls({ onRepositorySelected, onOpenHistory, onOpenProjec
   }
 
   useEffect(() => {
-    if (!sessionEmail) { setGithubState('disconnected'); setGithubLogin(''); setRepos([]); return; }
-    let active = true; setGithubState('checking'); void requestRepos(false).catch(() => { if (active) setGithubState('disconnected'); });
+    if (!sessionEmail) return;
+    let active = true; window.queueMicrotask(() => { void requestRepos(false).catch(() => { if (active) setGithubState('disconnected'); }); });
     return () => { active = false; };
   }, [sessionEmail]);
 

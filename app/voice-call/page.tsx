@@ -24,6 +24,7 @@ export default function VoiceCallPage() {
   const [notice, setNotice] = useState('Choose a voice style, then start a private AI call.');
   const [messages, setMessages] = useState<CallMessage[]>([]);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
+  const beginListeningRef = useRef<() => void>(() => undefined);
   const activeRef = useRef(false);
   const busyRef = useRef(false);
   const voicesRef = useRef<SpeechSynthesisVoice[]>([]);
@@ -89,7 +90,7 @@ export default function VoiceCallPage() {
         const finish = (nextNotice: string, restartListening: boolean) => {
           if (settled) return;
           settled = true; setSpeaking(false); busyRef.current = false; setNotice(nextNotice);
-          if (restartListening && activeRef.current) window.setTimeout(beginListening, 280);
+          if (restartListening && activeRef.current) window.setTimeout(() => beginListeningRef.current(), 280);
         };
         const speakReply = () => {
           const utterance = new SpeechSynthesisUtterance(speechText);
@@ -107,7 +108,7 @@ export default function VoiceCallPage() {
           }, 1_400);
         };
         engine.cancel(); engine.resume(); window.setTimeout(speakReply, 40);
-      } catch (error) { busyRef.current = false; setNotice(error instanceof Error ? error.message : 'DevDesk could not respond. Try again.'); if (activeRef.current) window.setTimeout(beginListening, 400); } finally { setThinking(false); }
+      } catch (error) { busyRef.current = false; setNotice(error instanceof Error ? error.message : 'DevDesk could not respond. Try again.'); if (activeRef.current) window.setTimeout(() => beginListeningRef.current(), 400); } finally { setThinking(false); }
     };
     recognition.onerror = (event) => { recognitionRef.current = null; setListening(false); setNotice(event.error === 'not-allowed' ? 'Microphone is blocked. Allow mic permission in Chrome settings, then tap the mic.' : 'DevDesk did not hear that. Tap the microphone and speak again.'); };
     recognition.onend = () => { recognitionRef.current = null; setListening(false); };
@@ -115,7 +116,8 @@ export default function VoiceCallPage() {
     try { recognition.start(); setListening(true); setNotice('Listening… speak naturally.'); } catch { recognitionRef.current = null; setNotice('Microphone could not start. Try again.'); }
   }, [callLanguage, muted, selectedVoiceName, style]);
 
-  useEffect(() => { if (callActive && !listening && !speaking && !thinking && !muted) beginListening(); }, [beginListening, callActive, listening, muted, speaking, thinking]);
+  useEffect(() => { beginListeningRef.current = beginListening; }, [beginListening]);
+  useEffect(() => { if (callActive && !listening && !speaking && !thinking && !muted) window.queueMicrotask(() => beginListeningRef.current()); }, [callActive, listening, muted, speaking, thinking]);
 
   function startCall() { if (!('speechSynthesis' in window)) { setNotice('Speech playback is not supported by this browser. Open this page in Chrome or Samsung Internet.'); return; } const engine = window.speechSynthesis; const welcome = new SpeechSynthesisUtterance(voicePreviewText(callLanguage())); welcome.lang = callLanguage(); const chosen = selectDeviceVoice(voicesRef.current, welcome.lang, style, selectedVoiceName); if (chosen) welcome.voice = chosen; welcome.rate = style === 'senior' ? 0.86 : style === 'girl' || style === 'boy' ? 1.08 : 0.96; welcome.onerror = () => setNotice('Voice playback is blocked. Tap Test voice, turn up media volume, then start again.'); engine.cancel(); engine.resume(); engine.speak(welcome); activeRef.current = true; setCallActive(true); setNotice('DevDesk call connected — you should hear a short welcome now.'); }
   function endCall() { activeRef.current = false; busyRef.current = false; recognitionRef.current?.stop(); recognitionRef.current = null; window.speechSynthesis?.cancel(); setListening(false); setSpeaking(false); setThinking(false); setCallActive(false); setNotice('Call ended. Start a new call whenever you are ready.'); }
